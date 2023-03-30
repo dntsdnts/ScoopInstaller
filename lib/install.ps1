@@ -1167,7 +1167,7 @@ function persist_data($manifest, $original_dir, $persist_dir) {
                 attrib $source +R /L
             } else {
                 # target is a file, create hard link
-                New-Item -Path $source -ItemType HardLink -Value $target | Out-Null
+                New-Item -Path $source -ItemType SymbolicLink -Value $target | Out-Null
             }
         }
     }
