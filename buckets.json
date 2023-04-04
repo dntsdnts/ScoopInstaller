@@ -6,6 +6,7 @@
     "sysinternals": "https://github.com/niheaven/scoop-sysinternals",
     "php": "https://github.com/ScoopInstaller/PHP",
     "nerd-fonts": "https://github.com/matthewjberger/scoop-nerd-fonts",
+    "sarasa-nerd-fonts": "https://github.com/jonz94/scoop-sarasa-nerd-fonts",
     "nonportable": "https://github.com/ScoopInstaller/Nonportable",
     "java": "https://github.com/ScoopInstaller/Java",
     "games": "https://github.com/Calinou/scoop-games"
