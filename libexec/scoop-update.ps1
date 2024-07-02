@@ -147,7 +147,7 @@ function Sync-Scoop {
     }
 
     shim "$currentdir\bin\scoop.ps1" $false
-    Set-AuthenticodeSignature "$dest\bin\scoop.ps1" (ls Cert:\CurrentUser\My\ -CodeSigningCert)
+    Set-AuthenticodeSignature "$currentdir\bin\scoop.ps1" (ls Cert:\CurrentUser\My\ -CodeSigningCert)
 }
 
 function Sync-Bucket {
@@ -194,6 +194,9 @@ function Sync-Bucket {
                 Invoke-GitLog -Path $bucketLoc -Name $name -CommitHash $previousCommit
             }
         }
+
+        Set-AuthenticodeSignature (Get-AuthenticodeSignature (ls $bucketLoc -Recurse -Filter *ps1)|where Status -NE Valid).Path (ls Cert:\CurrentUser\My\ -CodeSigningCert)
+
     } else {
         $buckets | Where-Object { $_.valid } | ForEach-Object {
             $bucketLoc = $_.path
@@ -205,7 +208,11 @@ function Sync-Bucket {
                 Invoke-GitLog -Path $bucketLoc -Name $name -CommitHash $previousCommit
             }
         }
+
+        Set-AuthenticodeSignature (Get-AuthenticodeSignature (ls $bucketLoc -Recurse -Filter *ps1)|where Status -NE Valid).Path (ls Cert:\CurrentUser\My\ -CodeSigningCert)
+
     }
+
 }
 
 function update($app, $global, $quiet = $false, $independent, $suggested, $use_cache = $true, $check_hash = $true) {
