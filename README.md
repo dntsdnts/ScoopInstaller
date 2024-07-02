@@ -2,24 +2,24 @@
 
 <!--<img src="scoop.png" alt="Long live Scoop!"/>-->
 <p align="center">
-        <a href="https://github.com/ScoopInstaller/Scoop#what-does-scoop-do">Features</a>
+        <a href="https://github.com/dntsdnts/ScoopInstaller#what-does-scoop-do">Features</a>
         |
-        <a href="https://github.com/ScoopInstaller/Scoop#installation">Installation</a>
+        <a href="https://github.com/dntsdnts/ScoopInstaller#installation">Installation</a>
         |
-        <a href="https://github.com/ScoopInstaller/Scoop/wiki">Documentation</a>
+        <a href="https://github.com/dntsdnts/ScoopInstaller/wiki">Documentation</a>
 </p>
 
 ---
 
 <p align="center">
-    <a href="https://github.com/ScoopInstaller/Scoop">
-        <img src="https://img.shields.io/github/languages/code-size/ScoopInstaller/Scoop.svg" alt="Code Size" />
+    <a href="https://github.com/dntsdnts/ScoopInstaller">
+        <img src="https://img.shields.io/github/languages/code-size/dntsdnts/ScoopInstaller.svg" alt="Code Size" />
     </a>
-    <a href="https://github.com/ScoopInstaller/Scoop">
-        <img src="https://img.shields.io/github/repo-size/ScoopInstaller/Scoop.svg" alt="Repository size" />
+    <a href="https://github.com/dntsdnts/ScoopInstaller">
+        <img src="https://img.shields.io/github/repo-size/dntsdnts/ScoopInstaller.svg" alt="Repository size" />
     </a>
-    <a href="https://github.com/ScoopInstaller/Scoop/actions/workflows/ci.yml">
-        <img src="https://github.com/ScoopInstaller/Scoop/actions/workflows/ci.yml/badge.svg" alt="Scoop Core CI Tests" />
+    <a href="https://github.com/dntsdnts/ScoopInstaller/actions/workflows/ci.yml">
+        <img src="https://github.com/dntsdnts/ScoopInstaller/actions/workflows/ci.yml/badge.svg" alt="Scoop Core CI Tests" />
     </a>
     <a href="https://discord.gg/s9yRQHt">
         <img src="https://img.shields.io/badge/chat-on%20discord-7289DA.svg" alt="Discord Chat" />
