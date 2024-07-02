@@ -4,7 +4,7 @@
 param($command)
 
 if (!$command) {
-    'ERROR: <command> missing'
+    error '<command> missing'
     my_usage
     exit 1
 }
@@ -12,7 +12,7 @@ if (!$command) {
 $path = Get-CommandPath $command
 
 if ($null -eq $path) {
-    Write-Host "'$command' not found / not a scoop shim."
+    warn "'$command' not found, not a scoop shim, or a broken shim."
     exit 2
 } else {
     friendly_path $path
@@ -22,8 +22,8 @@ if ($null -eq $path) {
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU7VcSd7EERIOplsV9Qhthj9qd
-# yNegggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUWAXWmh9gRXIcNVEpHgG4CiCD
+# 66ugggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -42,11 +42,11 @@ if ($null -eq $path) {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUa19m0uNFl7nAxyoYGYZrAv7ijE4wDQYJKoZIhvcNAQEBBQAEggEA
-# UTeiZWiizngiqc+QNgwMfYwoD4Q1yokKqONfRYn7xLOidS+FchbeASihjiody/zv
-# goHQ0DE79Pfs7KhPDUJCXitGt2J8c6Mkpc+FQwJdmw9dcIXcLf86Zl3y15J/2KH7
-# 2QwzMNRFMvib+pNMpOb4y0zU69Y1OnXBAvQ4Y0ORXKlAi4ZkGepkv79EAF+qhRIq
-# 6nyic2si2QCJNe5hMVuFGNtrFDlWKL6nF0PkPVZYgwoz5qTjlVL19piAlOZDUPZS
-# 0F9xBZNQQjje46ubSmaVvAd1or38cu1GW4imHx96HnSqfoJ0gLzHX8cpPXCNIwq/
-# 8oSVFhUPm/euxh84bsUj4g==
+# 9w0BCQQxFgQUTbuSzN90lLn9YRz2UQ3XVt3dqFswDQYJKoZIhvcNAQEBBQAEggEA
+# tGp7bVvMwNy/rgTfE5m9nmsU19FeT8iYcieHvYeD2y5nB2e1bWJArL8gxhKpQnvI
+# iq/5uJpp4YePWlTfkkTfUO6mO4SP0cHgIUsS0ZVp84QiUd699QRbOKHw90frE26T
+# u0jCsy3osKw4EcyXOZc6pNuWsQ6rlLTV7sgLQqT/YgEJpIKPMFRYYI9bz+58Cd6T
+# ERBrnQYiyKauM5/vlK7kI+r+KamAceogDCKBTct7/m3cbwXgrF9ARbX7jAU2xU7/
+# C4txS7c96Nl949CekJJ5gwy/9vPuCOToKloq48rC+rnSiamtHghrUVsx1zXZ7vAD
+# fjpjBNO5RrrzArkG80RlLg==
 # SIG # End signature block

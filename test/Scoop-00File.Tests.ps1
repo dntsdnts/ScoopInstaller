@@ -7,8 +7,7 @@ BeforeDiscovery {
         '[\\/]\.git[\\/]',
         '\.sublime-workspace$',
         '\.DS_Store$',
-        'supporting(\\|/)validator(\\|/)packages(\\|/)*',
-        'supporting(\\|/)shimexe(\\|/)packages(\\|/)*'
+        'supporting(\\|/)validator(\\|/)packages(\\|/)*'
     )
     $repo_files = (Get-ChildItem $TestPath -File -Recurse).FullName |
         Where-Object { $_ -inotmatch $($project_file_exclusions -join '|') }
@@ -191,8 +190,8 @@ Describe 'Style constraints for non-binary project files' -ForEach @(, $repo_fil
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUZZqU157mtOGZ0sHn87dEB2IH
-# 3hqgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUdOQp3B/5taWIKlwd40RoUNEO
+# k9WgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -211,11 +210,11 @@ Describe 'Style constraints for non-binary project files' -ForEach @(, $repo_fil
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUmg03u2VA29U+fbyCjm3bR2SwBHIwDQYJKoZIhvcNAQEBBQAEggEA
-# gsUld/MN/UvxGw0Go4qxwuiktCEnqDGoTJ89j+7Fruj1VTIih8w6/FZfP7OKNhJJ
-# pvEbFojytJNH0X4WnrX06/wxR/ZZU7+RJkm73HbTiFPwBEdQ2fv/MMSlJfk+dl2o
-# EAX0FL9/N+Vsj0ceQvSKX69kcUAB4U3EVkXm+SiqtwUeHYhgFrNctLONYQ54795T
-# 1PRxmGAsjnQt6J4iOhxZ7evqPamTY9Syx3XRJrLskD2YBgE3MUaS0OEMQS9ZRRNp
-# So9I+Msr+h2/+9RKs18+w/a/iZ5wWG8ayrKUOfWIHvTnHVo/xysGmFMlM+KWHuUa
-# JE6t6LARYJFJPpal1RNNvA==
+# 9w0BCQQxFgQUB/Q/Wtjw1aevmW23/Q6f7lRv5UowDQYJKoZIhvcNAQEBBQAEggEA
+# jnRu+tV21b3KZklgvofZcmvGi4oNOXJw3RiKKUx7ejpVYfcdOlh55nCRDdkg5a42
+# tx5tehor63KgkUHyfA/oqg2SyOuO2s5GT2ERc6KbhSmilBteVwtV3yotmrcEwwqs
+# mC4LERe652r5hQ90NiExuU0tkqSRwMRiupHBP4cvc4p3H+bpiNnpcy8Xi69OL7XU
+# u+jD5AnUttIYHbvWjYyyaE5zkMOFoyQa0JF+ZQROfVmyycSVpxu4Fs3NMiXnvoRG
+# e9pMeZyKOhnwrDTAn8PDTfte+gYijamtyWbeJ/4+Tgf+KWgrnwi05fXQIJNBvoAl
+# C+5EWwI3nfw3HzCdNAzzVg==
 # SIG # End signature block

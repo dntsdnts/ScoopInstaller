@@ -37,9 +37,9 @@ function Get-Dependency {
 
         if (!$manifest) {
             if (((Get-LocalBucket) -notcontains $bucket) -and $bucket) {
-                warn "Bucket '$bucket' not installed. Add it with 'scoop bucket add $bucket' or 'scoop bucket add $bucket <repo>'."
+                warn "Bucket '$bucket' not added. Add it with $(if($bucket -in (known_buckets)) { "'scoop bucket add $bucket' or " })'scoop bucket add $bucket <repo>'."
             }
-            abort "Couldn't find manifest for '$AppName'$(if(!$bucket) { '.' } else { " from '$bucket' bucket." })"
+            abort "Couldn't find manifest for '$AppName'$(if($bucket) { " from '$bucket' bucket" } elseif($url) { " at '$url'" })."
         }
 
         $deps = @(Get-InstallationHelper $manifest $Architecture) + @($manifest.depends) | Select-Object -Unique
@@ -175,8 +175,8 @@ function Test-LessmsiRequirement {
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUpuPLZ8NGD9odqncl8T2gEPb4
-# vMWgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUMJ/kavlSNXAfd2hAU4csmK6m
+# UoGgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -195,11 +195,11 @@ function Test-LessmsiRequirement {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQU/J0FZ7Da0kM8XQGaZPWmDNyzDIMwDQYJKoZIhvcNAQEBBQAEggEA
-# qu7eGGpDAT+PcQQq5LaRQyBXfy/TZvMrmJcivvkw/o6lpRsfuUXje+LaDj362zOL
-# qXb12au1KELrKqrEiJ819fWYT/O+M4fOssY9PAJ4kZkurk6b5tcDI0bFkpV22f/2
-# m1M2MWxoTfkusTpCpLhKy7zgJ1W8JOiBBB+gr6yBK2DzIeMnl1xXUrVlnQuUbEeP
-# QPggfj9bseuDgJCkESxww+Q8G3GYADp9sKw+EZwerHaP7H4M2obBUV0XPAKwICOG
-# Bk9VVlnCwzxxfvP2fAySDD1tZk4ELza03sCBceADESoFi1ftTJieumoo+pa6qOya
-# yhXS6N8lc4bMdb2Zopkq2w==
+# 9w0BCQQxFgQUouwlZ8ZbjddqCjiz5ji1hmO7JEgwDQYJKoZIhvcNAQEBBQAEggEA
+# iS/j/f9Ih8hlLSh13555T2SK4Hc+QAB4JvBgyJNxBRacAQzwrXvxHKHa7ZlLgSt/
+# nrMk0zHgPtQL8D2p3OMdQkjyWXFRGr7iRAJoI4VMSokhw3EGYH46Z+1uoDk0q7L8
+# 0HkOs4DHBnVo1RUfO4rL7YIf84/gVCR1+RTBqTOP/C7b4OPCzJGq+nXnsbgBDTxY
+# 8HnFplKwe1fjJjjrKic4P+rDFRVqwIg3eUvfoCkJ6LB3H8bM/f+6moykze7GIIaH
+# aBKesvvjWJQMgpOYDgH/qye8iL0+/Gdk6pAatGuzhmHri5o7VXcsiSfuadXxZM9t
+# k2EiAX20lLdRiiQ0FMxfKQ==
 # SIG # End signature block

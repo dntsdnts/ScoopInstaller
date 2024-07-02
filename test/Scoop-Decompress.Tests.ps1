@@ -14,7 +14,7 @@ Describe 'Decompression function' -Tag 'Scoop', 'Windows', 'Decompress' {
 
         function test_extract($extract_fn, $from, $removal) {
             $to = (strip_ext $from) -replace '\.tar$', ''
-            & $extract_fn ($from -replace '/', '\') ($to -replace '/', '\') -Removal:$removal
+            & $extract_fn ($from -replace '/', '\') ($to -replace '/', '\') -Removal:$removal -ExtractDir $args[0]
             return $to
         }
 
@@ -25,7 +25,7 @@ Describe 'Decompression function' -Tag 'Scoop', 'Windows', 'Decompress' {
         }
         It 'Test cases should exist and hash should match' {
             $testcases | Should -Exist
-            (Get-FileHash -Path $testcases -Algorithm SHA256).Hash.ToLower() | Should -Be '791bfce192917a2ff225dcdd87d23ae5f720b20178d85e68e4b1b56139cf8e6a'
+            (Get-FileHash -Path $testcases -Algorithm SHA256).Hash.ToLower() | Should -Be '23a23a63e89ff95f5ef27f0cacf08055c2779cf41932266d8f509c2e200b8b63'
         }
         It 'Test cases should be extracted correctly' {
             { Microsoft.PowerShell.Archive\Expand-Archive -Path $testcases -DestinationPath $working_dir } | Should -Not -Throw
@@ -50,10 +50,29 @@ Describe 'Decompression function' -Tag 'Scoop', 'Windows', 'Decompress' {
             $test6_1 = "$working_dir\7ZipTest6.part01.rar"
             $test6_2 = "$working_dir\7ZipTest6.part02.rar"
             $test6_3 = "$working_dir\7ZipTest6.part03.rar"
+            $test7 = "$working_dir\NSISTest.exe"
+        }
+
+        AfterEach {
+            Remove-Item -Path $to -Recurse -Force
         }
 
         It 'extract normal compressed file' {
             $to = test_extract 'Expand-7zipArchive' $test1
+            $to | Should -Exist
+            "$to\empty" | Should -Exist
+            (Get-ChildItem $to).Count | Should -Be 3
+        }
+
+        It 'extract "extract_dir" correctly' {
+            $to = test_extract 'Expand-7zipArchive' $test1 $false 'tmp'
+            $to | Should -Exist
+            "$to\empty" | Should -Exist
+            (Get-ChildItem $to).Count | Should -Be 1
+        }
+
+        It 'extract "extract_dir" with spaces correctly' {
+            $to = test_extract 'Expand-7zipArchive' $test1 $false 'tmp 2'
             $to | Should -Exist
             "$to\empty" | Should -Exist
             (Get-ChildItem $to).Count | Should -Be 1
@@ -94,21 +113,39 @@ Describe 'Decompression function' -Tag 'Scoop', 'Windows', 'Decompress' {
             (Get-ChildItem $to).Count | Should -Be 1
         }
 
+        It 'extract NSIS installer' {
+            $to = test_extract 'Expand-7zipArchive' $test7
+            $to | Should -Exist
+            "$to\empty" | Should -Exist
+            (Get-ChildItem $to).Count | Should -Be 1
+        }
+
+        It 'self-extract NSIS installer' {
+            $to = "$working_dir\NSIS Test"
+            $null = Invoke-ExternalCommand -FilePath $test7 -ArgumentList @('/S', '/NCRC', "/D=$to")
+            $to | Should -Exist
+            "$to\empty" | Should -Exist
+            (Get-ChildItem $to).Count | Should -Be 1
+        }
+
         It 'works with "-Removal" switch ($removal param)' {
             $test1 | Should -Exist
-            test_extract 'Expand-7zipArchive' $test1 $true
+            $to = test_extract 'Expand-7zipArchive' $test1 $true
+            $to | Should -Exist
             $test1 | Should -Not -Exist
             $test5_1 | Should -Exist
             $test5_2 | Should -Exist
             $test5_3 | Should -Exist
-            test_extract 'Expand-7zipArchive' $test5_1 $true
+            $to = test_extract 'Expand-7zipArchive' $test5_1 $true
+            $to | Should -Exist
             $test5_1 | Should -Not -Exist
             $test5_2 | Should -Not -Exist
             $test5_3 | Should -Not -Exist
             $test6_1 | Should -Exist
             $test6_2 | Should -Exist
             $test6_3 | Should -Exist
-            test_extract 'Expand-7zipArchive' $test6_1 $true
+            $to = test_extract 'Expand-7zipArchive' $test6_1 $true
+            $to | Should -Exist
             $test6_1 | Should -Not -Exist
             $test6_2 | Should -Not -Exist
             $test6_3 | Should -Not -Exist
@@ -158,11 +195,13 @@ Describe 'Decompression function' -Tag 'Scoop', 'Windows', 'Decompress' {
             } elseif (!(installed lessmsi)) {
                 scoop install lessmsi
             }
+            Copy-Item "$working_dir\MSITest.msi" "$working_dir\MSI Test.msi"
             $test1 = "$working_dir\MSITest.msi"
-            $test2 = "$working_dir\MSITestNull.msi"
+            $test2 = "$working_dir\MSI Test.msi"
+            $test3 = "$working_dir\MSITestNull.msi"
         }
 
-        It 'extract normal MSI file' {
+        It 'extract normal MSI file using msiexec' {
             Mock get_config { $false }
             $to = test_extract 'Expand-MsiArchive' $test1
             $to | Should -Exist
@@ -170,9 +209,29 @@ Describe 'Decompression function' -Tag 'Scoop', 'Windows', 'Decompress' {
             (Get-ChildItem "$to\MSITest").Count | Should -Be 1
         }
 
-        It 'extract empty MSI file using lessmsi' {
+        It 'extract normal MSI file with whitespace in path using msiexec' {
+            Mock get_config { $false }
+            $to = test_extract 'Expand-MsiArchive' $test2
+            $to | Should -Exist
+            "$to\MSITest\empty" | Should -Exist
+            (Get-ChildItem "$to\MSITest").Count | Should -Be 1
+        }
+
+        It 'extract normal MSI file using lessmsi' {
+            Mock get_config { $true }
+            $to = test_extract 'Expand-MsiArchive' $test1
+            $to | Should -Exist
+        }
+
+        It 'extract normal MSI file with whitespace in path using lessmsi' {
             Mock get_config { $true }
             $to = test_extract 'Expand-MsiArchive' $test2
+            $to | Should -Exist
+        }
+
+        It 'extract empty MSI file using lessmsi' {
+            Mock get_config { $true }
+            $to = test_extract 'Expand-MsiArchive' $test3
             $to | Should -Exist
         }
 
@@ -233,8 +292,8 @@ Describe 'Decompression function' -Tag 'Scoop', 'Windows', 'Decompress' {
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUETM/PMl5ueWOZ1xNxgStxHKf
-# LkCgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQURCxXlKhPt7AhmZgSSyeiEFEG
+# TuKgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -253,11 +312,11 @@ Describe 'Decompression function' -Tag 'Scoop', 'Windows', 'Decompress' {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUh5kNqibzOWxKykpWg9QuBXBUDAcwDQYJKoZIhvcNAQEBBQAEggEA
-# jfBAOktWIStCkOdNq5pEQe/f2b9ynZ+nGNHEsbQ+zPPMnfahYA6morQ3E3i9vHc8
-# EhMMxYFh16t1Lvzf6FEOGSNPI+hWc2dwSazGlzIkazQXRXGcbxKO+c4VST1FzHN4
-# JzOCz1POFOpF8j3zQ53rgu/D0SAT5+3YUiXR8WbBJmwpYHDmlfl7x4x0rVkIRTyo
-# AehFGKdv5SbBAMB02K/XYWm4UqUsyAXg40yLywelLIySYNdnlQptAzjdXg4k1svQ
-# 89uBYHkYL9Aw3IFJHzBVDFJaGsYUZDmG4eXcXpqJ80IbW6gERbK3Df33ymRRgGfz
-# zgpLiggnXJKQX2lvb8qQfw==
+# 9w0BCQQxFgQUxmFGSGoqOtTXP1LaGvnd8Ezpt30wDQYJKoZIhvcNAQEBBQAEggEA
+# K4dFsLg+b3nleP94T9ze5rfTLfVcpaJ5HjbwxQ4w0XdJADpzq5IMm+NzoLrNi4/C
+# 0C2OjaUnfXT4kK6avLH2VS3GCvp6MMWW4zdQ7Xw8Qq+/l0cai0mM3Tk08gKsdNiZ
+# epRw8mlwhCKtQCHOJ3RKjO+i6oKhGU0ObISlNgCcSddVZMKThZaalwm8J89gpVhJ
+# YJGOuSJSFEAKz2SWaUDC/3nuZenQGUpqZMpCwk8KZ5qT52EjadiDZ3ehle1P3Csf
+# JCy+9irYq2IHH6kpchwLbutcUiqNX/ZFbunpWEESw8IlvysYxfES8Qhf7rRxUevP
+# h+uf2L2pEnqssyV5u0LOdg==
 # SIG # End signature block

@@ -36,14 +36,14 @@
 
 $opt, $apps, $err = getopt $args 'asnup' @('all', 'scan', 'no-depends', 'no-update-scoop', 'passthru')
 if ($err) { "scoop virustotal: $err"; exit 1 }
-if (!$apps) { my_usage; exit 1 }
+if (!$apps -and -$all) { my_usage; exit 1 }
 $architecture = Format-ArchitectureString
 
 if (is_scoop_outdated) {
     if ($opt.u -or $opt.'no-update-scoop') {
         warn 'Scoop is out of date.'
     } else {
-        scoop update
+        & "$PSScriptRoot\scoop-update.ps1"
     }
 }
 
@@ -136,7 +136,7 @@ Function Get-VirusTotalResultByHash ($hash, $url, $app) {
                 warn "$app`: $unsafe/$total, see $report_url"
             }
             Default {
-                warn "`e[31m$app`: $unsafe/$total, see $report_url`e[0m"
+                warn "$([char]0x1b)[31m$app`: $unsafe/$total, see $report_url$([char]0x1b)[0m"
             }
         }
         $maliciousResults = $vendorResults |
@@ -393,8 +393,8 @@ exit $exit_code
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUKaHJo24aPmOg/d6AnZ1DyHiT
-# I8KgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUZHYE010vmg1zcBja5EmBAzHl
+# PwygggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -413,11 +413,11 @@ exit $exit_code
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUVwUkDclyuZH7QpvCI7aov9sR5XUwDQYJKoZIhvcNAQEBBQAEggEA
-# SLIfuAusn8PmMkI78Fo+2zl9YuIevKUvjblIHgR8fjL5XOnNNJvqaU57AB1+dd4L
-# RXvmiCSMuMv3XhsWuYOasrOojf33/te7cWWn/qRAQ2yWKQaoOmp+eFqvC8Xv+TID
-# GIvw8tPoGTyWilDLiayz0msLjOUVu910pppY9TTN08hWq29yfJ7O7YwzQJPuREqz
-# O8wRFqRtkXL4k/MpZyd6BjW4B7OyN1C+SALlk2caZrJ2JMEGRvWhZB+J473ZX9/+
-# AcR5e6j10WAMf8LqweaoVQXo2cLRAG6YO5fLZOt2ektd6h7nqrV1g+seYrbYfGUL
-# dUfmpivu9+aAjlVUzDfFbw==
+# 9w0BCQQxFgQU8PLyMVAj8kK4m+4XNO424xR5hu8wDQYJKoZIhvcNAQEBBQAEggEA
+# oz576YB/1Wl5YghkwYVC3B3azXH7euAcJlt/Zn7n8e0FqEbnPbQ0+lKY/8vuJF3X
+# SkpKEGtkplVAN4CN6jrgvvhJ1OmGVhGv+i1miqRcKNZ/ReNu/ZzBsInBviFqWhGR
+# DDqKc7Xw5g6FhMVATcv8uNTLyDGU6+wKZAaQVyMnKwlrJAyVlEvh6xOklqB04Yca
+# IojaVcH9iwLJsJdR6qlSboMH8EDZFkm7UjV8xXeu7UMhMutida1eZV9F+xbKrIqV
+# zGJ+ERHrRa1JF8vnbCEBgxdkM+Urcknor6ryA50/T39WA+I7q3nsr/vZ5qD0oEdu
+# n3Jz/L822Ash7nN8zlVV2g==
 # SIG # End signature block

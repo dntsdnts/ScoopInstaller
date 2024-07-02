@@ -1,6 +1,7 @@
 BeforeAll {
     . "$PSScriptRoot\Scoop-TestLib.ps1"
     . "$PSScriptRoot\..\lib\core.ps1"
+    . "$PSScriptRoot\..\lib\system.ps1"
     . "$PSScriptRoot\..\lib\install.ps1"
 }
 
@@ -167,7 +168,7 @@ Describe 'shim' -Tag 'Scoop', 'Windows' {
     BeforeAll {
         $working_dir = setup_working 'shim'
         $shimdir = shimdir
-        $(ensure_in_path $shimdir) | Out-Null
+        Add-Path $shimdir
     }
 
     It "links a file onto the user's path" {
@@ -201,7 +202,7 @@ Describe 'rm_shim' -Tag 'Scoop', 'Windows' {
     BeforeAll {
         $working_dir = setup_working 'shim'
         $shimdir = shimdir
-        $(ensure_in_path $shimdir) | Out-Null
+        Add-Path $shimdir
     }
 
     It 'removes shim from path' {
@@ -220,7 +221,7 @@ Describe 'get_app_name_from_shim' -Tag 'Scoop', 'Windows' {
     BeforeAll {
         $working_dir = setup_working 'shim'
         $shimdir = shimdir
-        $(ensure_in_path $shimdir) | Out-Null
+        Add-Path $shimdir
         Mock appsdir { $working_dir }
     }
 
@@ -255,36 +256,6 @@ Describe 'get_app_name_from_shim' -Tag 'Scoop', 'Windows' {
         }
         Remove-Item -Force -Recurse -ErrorAction SilentlyContinue "$working_dir/mockapp"
         Remove-Item -Force -ErrorAction SilentlyContinue "$working_dir/moch-shim.ps1"
-    }
-}
-
-Describe 'ensure_robocopy_in_path' -Tag 'Scoop', 'Windows' {
-    BeforeAll {
-        $shimdir = shimdir $false
-        Mock versiondir { "$PSScriptRoot\.." }
-    }
-
-    It 'shims robocopy when not on path' {
-        Mock Test-CommandAvailable { $false }
-        Test-CommandAvailable robocopy | Should -Be $false
-
-        ensure_robocopy_in_path
-
-        # "$shimdir/robocopy.ps1" | should -exist
-        "$shimdir/robocopy.exe" | Should -Exist
-
-        # clean up
-        rm_shim robocopy $(shimdir $false) | Out-Null
-    }
-
-    It 'does not shim robocopy when it is in path' {
-        Mock Test-CommandAvailable { $true }
-        Test-CommandAvailable robocopy | Should -Be $true
-
-        ensure_robocopy_in_path
-
-        # "$shimdir/robocopy.ps1" | should -not -exist
-        "$shimdir/robocopy.exe" | Should -Not -Exist
     }
 }
 
@@ -431,8 +402,8 @@ Describe 'Format Architecture String' -Tag 'Scoop' {
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU8CeY3OsXsptPeJ0xtL4Y8GI/
-# lAWgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUFV3Tfsd0pNaXXAXKAUrv3gtn
+# ocmgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -451,11 +422,11 @@ Describe 'Format Architecture String' -Tag 'Scoop' {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUxkP7Bnwb4BqELRJAfc9mgJ9vuUkwDQYJKoZIhvcNAQEBBQAEggEA
-# M2p97QBTR+fADi8VFUC53fS3EfE+136A3iX0ZRKTCh0k4wUv3kMWTEfD4iBa1BKU
-# CZV14mosaaQgB7ouWBiSWTSpC4fyKSQG3KQN8kvugUx32spFN8lmN4WDCx3D7CSd
-# M/k5qnUxx8rn1WT+VllVf03vMN7AkLlwp1tDkB49PwU06KgbgZP6JGlF7SbY61aG
-# s2UMO2L6eUKHlB2+3CTCpCGpmFbBM3/h7ZJB0IHIuil25QqmsVEMh2hAU0SdkBLr
-# Nq4XLcvBTgv9xxqxBNttV6WWr0KvyuzdMdqrTiO9iaiQUgdboYpGPZhz8sxC6LhE
-# VA10rxBqN+lmMwO++4dMuA==
+# 9w0BCQQxFgQUPreqaVp9knZAO9sq8v6ZF37UNiMwDQYJKoZIhvcNAQEBBQAEggEA
+# LMdT3FzjDACgfSa1AJSos0zZr0PnSU7vuXWgmUHHoXdfrX5aLgYJQtmUhqk66Mfs
+# rfW0GQRg2mAeyz24yKfbcF6mm/H+qRj2UGxqn9msoduWWElWJF1R7rIUTFLCzfee
+# 7DSbf7mCYIS4sKo0qRaSwxCPUWllX/U1WmD1rPUxEcmMhSddg3mDZOiGrWVNoGAj
+# Ch6ua7ssyhn4WBgKoHu8yPxRhlt5sEW1adk4QOu8f6iLubtC+eNp/vGMMxYMVkQG
+# PHaJc/xdTaCnfBNnC92dStW3PDGP1F40AJHtaWQ/xtbcOCznkL0EYKsP119Ng1ux
+# uODx7cq8iNrtHd5VBczIgQ==
 # SIG # End signature block

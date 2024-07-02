@@ -115,6 +115,11 @@
 #       Nightly version is formatted as 'nightly-yyyyMMdd' and will be updated after one day if this is set to $true.
 #       Otherwise, nightly version will not be updated unless `--force` is used.
 #
+# use_isolated_path: $true|$false|[string]
+#       When set to $true, Scoop will use `SCOOP_PATH` environment variable to store apps' `PATH`s.
+#       When set to arbitrary non-empty string, Scoop will use that string as the environment variable name instead.
+#       This is useful when you want to isolate Scoop from the system `PATH`.
+#
 # ARIA2 configuration
 # -------------------
 #
@@ -151,30 +156,12 @@ if (!$name) {
 } elseif ($name -like '--help') {
     my_usage
 } elseif ($name -like 'rm') {
-    # NOTE Scoop config file migration. Remove this after 2023/6/30
-    if ($value -notin 'SCOOP_REPO', 'SCOOP_BRANCH' -and $value -in $newConfigNames.Keys) {
-        warn ('Config option "{0}" is deprecated, please use "{1}" instead next time.' -f $value, $newConfigNames.$value)
-        $value = $newConfigNames.$value
-    }
-    # END NOTE
     set_config $value $null | Out-Null
     Write-Host "'$value' has been removed"
 } elseif ($null -ne $value) {
-    # NOTE Scoop config file migration. Remove this after 2023/6/30
-    if ($name -notin 'SCOOP_REPO', 'SCOOP_BRANCH' -and $name -in $newConfigNames.Keys) {
-        warn ('Config option "{0}" is deprecated, please use "{1}" instead next time.' -f $name, $newConfigNames.$name)
-        $name = $newConfigNames.$name
-    }
-    # END NOTE
     set_config $name $value | Out-Null
     Write-Host "'$name' has been set to '$value'"
 } else {
-    # NOTE Scoop config file migration. Remove this after 2023/6/30
-    if ($name -notin 'SCOOP_REPO', 'SCOOP_BRANCH' -and $name -in $newConfigNames.Keys) {
-        warn ('Config option "{0}" is deprecated, please use "{1}" instead next time.' -f $name, $newConfigNames.$name)
-        $name = $newConfigNames.$name
-    }
-    # END NOTE
     $value = get_config $name
     if($null -eq $value) {
         Write-Host "'$name' is not set"
@@ -192,8 +179,8 @@ exit 0
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUXe9ZbbxGkdp7FurgqTCwtBkv
-# b5ugggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUvIHjA6KzVsHQlbnNw1jzcBUH
+# zs+gggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -212,11 +199,11 @@ exit 0
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUCIBuPptn4MOPm8ljsF38ay2bW/4wDQYJKoZIhvcNAQEBBQAEggEA
-# HY6kTgOXACnrWubbnsJJW+P4o42RPJC8+Ja7Ae2B7IhLNcO+t9d9yKWNgN5OUfv1
-# bZXYP/UwmJzPRwI1LPKQ6DkFi9NpklOEQyitSvSLRTB5FGG8V37Fa2CJHxzHJsBv
-# vEvG4hbjOGfRNqKrj7wUG603SnyTaOtWbdHLlAqmxvxhUHFvBLBb4GxbMPji2WXz
-# D0JcrAsVANNptwK06SzF36jzWL6XdDIEdZ+3r4i2JRYYqhz5x52dfNNOcjB92P8n
-# d/oc2Gce55MFXVP10JHpbIH3AhtQe8jOV0EPD5l6V97bYZ4RwZQW3X0Oe4ovvjX+
-# Qk9WawsSD5Pw+oXnpguP7w==
+# 9w0BCQQxFgQUdo7EUmftJmEB5BjMIiBRI0A4bh4wDQYJKoZIhvcNAQEBBQAEggEA
+# x5O/+UJGp7wnMp9r5PvHKc5Ff+GTKH/w4+/7V8EdBDr1OvVi8tMRfSD8kginEJeg
+# oDCGeZEynrdZbLUM3shMg8cQXqDbVGe6Jm/MG+5rrcW44iGd4k84ym0CkbA45/E9
+# 4P0idpz+ziwubQg7B8uthknSSjvxLiGU6W41rAgcM7Aq3cDwkHCQdetZ6UYXs6fp
+# tUIuAEK4/I0I2OBrmV43GOJlhsDX6/ExpFxK9KUG9w+DD8ff9tduTxUnjGnucuom
+# ep7H3Wy/q+PCoTKN3ew0fuHbObcZDHK1TboTeVT9mdBv1pXzcSnDatGNGsRC9QDy
+# nWWRF7+e5XCfKqUUUmUiMg==
 # SIG # End signature block

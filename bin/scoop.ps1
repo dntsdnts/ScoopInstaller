@@ -20,8 +20,8 @@ switch ($subCommand) {
     }
     ({ $subCommand -in @('-v', '--version') }) {
         Write-Host 'Current Scoop version:'
-        if ((Test-CommandAvailable git) -and (Test-Path "$PSScriptRoot\..\.git") -and (get_config SCOOP_BRANCH 'master') -ne 'master') {
-            git -C "$PSScriptRoot\.." --no-pager log --oneline HEAD -n 1
+        if (Test-GitAvailable -and (Test-Path "$PSScriptRoot\..\.git") -and (get_config SCOOP_BRANCH 'master') -ne 'master') {
+            Invoke-Git -Path "$PSScriptRoot\.." -ArgumentList @('log', 'HEAD', '-1', '--oneline')
         } else {
             $version = Select-String -Pattern '^## \[(v[\d.]+)\].*?([\d-]+)$' -Path "$PSScriptRoot\..\CHANGELOG.md"
             Write-Host $version.Matches.Groups[1].Value -ForegroundColor Cyan -NoNewline
@@ -31,9 +31,9 @@ switch ($subCommand) {
 
         Get-LocalBucket | ForEach-Object {
             $bucketLoc = Find-BucketDirectory $_ -Root
-            if ((Test-Path "$bucketLoc\.git") -and (Test-CommandAvailable git)) {
+            if (Test-GitAvailable -and (Test-Path "$bucketLoc\.git")) {
                 Write-Host "'$_' bucket:"
-                git -C "$bucketLoc" --no-pager log --oneline HEAD -n 1
+                Invoke-Git -Path $bucketLoc -ArgumentList @('log', 'HEAD', '-1', '--oneline')
                 Write-Host ''
             }
         }
@@ -55,8 +55,8 @@ switch ($subCommand) {
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUWAWaXUAWSdJO913P1SQILfdt
-# g9igggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUELyevwsFFZ7swVNmnKKL5odV
+# N2WgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -75,11 +75,11 @@ switch ($subCommand) {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUf3rBSIRF889Zu1NFO4I1yIw7PCQwDQYJKoZIhvcNAQEBBQAEggEA
-# OjVnKJgdUa5a4/cvGRcxVtkAUWT/adaEbQgXOmkETBNd6cDH3d7Jo0AXUKEGpy/H
-# SomBKPhcr3C09pzTfhCs1+Lnkxdyfobps3Wb3IDNcgjLZjJk611Ubmz35Z5DLUw5
-# U79RiqAwpXqhoNNvyp/g5WbO9fns5MMY9egoz8K8NfFFHmP1BE+ThRtoO9bVf9n/
-# wOA+O8cUz2uUo73zucQ7Pu8glkwkuwAaIIlLIDlwgdc4qZ53NuVyfd4/JW06BsW4
-# /wQB8xkxGlUR+Z6HH82hB4JEK66S09QdNe2A0P7jhfxAc+w0k3nnPSqlGwOfW27O
-# +RazRPSCF2UZAZo3HzPG3g==
+# 9w0BCQQxFgQUrvo6OFunluS9+KvzGuxp8PKI3nkwDQYJKoZIhvcNAQEBBQAEggEA
+# nFKQ6Cj8VO+AFZzhsmstc37rrAn+U3dGDfR+MObaccT1HyQDw6aYEpthPvUWJf+S
+# +GlRSvC+TZMtJFRku+gBiFBf4Re0faUqTq0aORQ6XWDjC8/yLcVLvceO2RaJ+Jwl
+# 06OQvQkRFKKn7AWLpxzmIYcPT1PbnEd6xnjmhSLrG4CviNUyQEiV6sWXR//EPCvj
+# Ec8Ein4fZaEhFn4bHBfEE6fcOR8CS9hXbZNoZJZROoOnVRxT4SJwP575PdY2TbQe
+# BhIXpVu+SzQ/0SEs3gM0VDPQlZkm6gbYzks4P6SctDHJlVhhSj+HfdlCweXMCZeI
+# PGdympnNRLZWAqIVvJsHzg==
 # SIG # End signature block

@@ -13,7 +13,7 @@
 # following arguments are treated as non-option arguments, even if
 # they begin with a hyphen. The "--" itself will not be included in
 # the returned $opts. (POSIX-compatible)
-function getopt($argv, $shortopts, $longopts) {
+function getopt([String[]]$argv, [String]$shortopts, [String[]]$longopts) {
     $opts = @{}; $rem = @()
 
     function err($msg) {
@@ -23,10 +23,6 @@ function getopt($argv, $shortopts, $longopts) {
     function regex_escape($str) {
         return [Regex]::Escape($str)
     }
-
-    # ensure these are arrays
-    $argv = @($argv -split ' ')
-    $longopts = @($longopts)
 
     for ($i = 0; $i -lt $argv.Length; $i++) {
         $arg = $argv[$i]
@@ -81,15 +77,14 @@ function getopt($argv, $shortopts, $longopts) {
             $rem += $arg
         }
     }
-
     $opts, $rem
 }
 
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU5emGprSZID/t1Xat/449GK7l
-# J1SgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUl7qj2yjpzxKVnnHlChRoimH6
+# 0kSgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -108,11 +103,11 @@ function getopt($argv, $shortopts, $longopts) {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUC3hOLFHb1DrDAXW65FwGwbrcnywwDQYJKoZIhvcNAQEBBQAEggEA
-# BlADHYR9CP1jCoG7Z1JMev19Ss1PAMvSMJL5kcTKAFrrr5cZu/hVoFdt3lbqk0UY
-# lZvoe7Xz++RHqHfe4lMTlLQKU+qEcQCYkn996BmtLA+ezOaVG3+Ge7jFWa+EyAWQ
-# hnFggLpm4dC4rAheQCTnocWvSjqDN4iZZXQNSRkGGFHUWTHABeGHhbCK7TaDLQX7
-# fSnKyPr4+6+2K0ip4fUB7pvfv0GqYComRbuSRRvXe76bRrJEZ9f4fv5ZBKdoSI4E
-# 0mIUgENYGyL91GhXBJTqa9fTlgquzulkFkH95u2Q47lor1V/hG56TgMzVNKUGtTh
-# CN6OIPybjrcwx8Sr5DJiAA==
+# 9w0BCQQxFgQUXbnW/yRunrWR267ytfAQgSgHShYwDQYJKoZIhvcNAQEBBQAEggEA
+# B1eny+VV/eYCfr8EazxzUAEJCNq+21ODH4h8LRT1etN3SNm4lH8UI49yTORWGLed
+# gBEKnt/o6mLcwjYVX0hU4Vg9gOtJMd+/AM7lRrRFFO/BP7k60DNMsrgMSwXRRv0+
+# WvkLtHP4dtie6bzsAtr2beyZSRsjjkOMFWD+2eqObHUgN9TJLpSexf/k7BXk5cFp
+# yvLXoTN+zXSf0K3EjRMXP7aV4zu0u6LCeB7zVemV+CkxO5h5eAlSYHTXJEsNFWcV
+# vl3EeYVhc6OXVSf3eTOblsu1tAlZz6zl54WBGWSbepsoXe2lWkOqCrR5cmrOTlMh
+# Fr0x0sZl666a5PmdrtmUQQ==
 # SIG # End signature block

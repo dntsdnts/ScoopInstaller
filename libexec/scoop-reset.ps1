@@ -8,6 +8,7 @@
 
 . "$PSScriptRoot\..\lib\getopt.ps1"
 . "$PSScriptRoot\..\lib\manifest.ps1" # 'Select-CurrentVersion' (indirectly)
+. "$PSScriptRoot\..\lib\system.ps1" # 'env_add_path' (indirectly)
 . "$PSScriptRoot\..\lib\install.ps1"
 . "$PSScriptRoot\..\lib\versions.ps1" # 'Select-CurrentVersion'
 . "$PSScriptRoot\..\lib\shortcuts.ps1"
@@ -69,7 +70,7 @@ $apps | ForEach-Object {
 
     #region Workaround for #2952
     if (test_running_process $app $global) {
-        continue
+        return
     }
     #endregion Workaround for #2952
 
@@ -79,6 +80,9 @@ $apps | ForEach-Object {
     $dir = link_current $dir
     create_shims $manifest $dir $global $architecture
     create_startmenu_shortcuts $manifest $dir $global $architecture
+    # unset all potential old env before re-adding
+    env_rm_path $manifest $dir $global $architecture
+    env_rm $manifest $global $architecture
     env_add_path $manifest $dir $global $architecture
     env_set $manifest $dir $global $architecture
     # unlink all potential old link before re-persisting
@@ -92,8 +96,8 @@ exit 0
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUEbhgQP1KdcnfALfddif2EwKs
-# HqegggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUOuPWZe0xqfTRahEKmf6eoG2g
+# fCmgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -112,11 +116,11 @@ exit 0
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUwF6a8P/b7Lh4RC7cgjB7sCxu1EIwDQYJKoZIhvcNAQEBBQAEggEA
-# bVh0c1n8pcxS9Gd5VHNLgCRx5MyUeEcb7eSi+yYBz9dliLJK9ArHc08Rkrk+BHG1
-# 65xVhFDamd9ijiqvakjotzBWfWuap7vZDlEH2PPQWbkH8/Kj6Z0sai81sNBX11qd
-# 37e15VZK2Ueu4sp8Mbw8Ci/+x6CIY2TAcrVDTEMcg4Vb3eUlqlrjG3NuSkoJOltX
-# F9lF4za3+Sq/D1Q49uS9eeH6DvGyd2qJeL79h4yWrmKRbaULTvSIPlz0vzHnwXBP
-# PNAyekyc4+NZ+qC45VBhn/ANL5ZBGveNdIkT6FyTRiV4olsinanCEqLw7lirE1Nz
-# PafF8ZCJl3as6hAdD30FAg==
+# 9w0BCQQxFgQUMYYL6nC/Ln3pdDm9h8pA8TO5AQgwDQYJKoZIhvcNAQEBBQAEggEA
+# VWCRcRnebNfvK7SeV/73JhRwuFrplXq6bBhS3SpAedwg8P44sh2D8yT8J8rmzWws
+# 30o7/IKSzwvB32qz82zNANeH5ofcBtnqN1RFweDGsYtLFZNKX0hliWbZdhfZ2glO
+# RtyR77wjTW/2JgEwJ/cg+pSp7buIxvYMfSLu0lhvTXk2TrfhLPaBCGTxYPde2tLm
+# 5zZEQz5vjNMHIi5LH6mD2IrrJLVAkhJyrePuNyIN0KAoiwwFaf8N3ci22sQlR9ix
+# /VV5TI27eSpH92SZDMNFuF9e2J/CZ82YMcA+Z0y9JHCuQ6bNu4q58Sh6D27pOR58
+# uDmYAvNkh2GDA/sTFzPg6Q==
 # SIG # End signature block

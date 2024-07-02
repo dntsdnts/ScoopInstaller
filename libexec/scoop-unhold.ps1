@@ -53,8 +53,16 @@ $apps | ForEach-Object {
     }
     $dir = versiondir $app $version $global
     $json = install_info $app $version $global
+    if (!$json) {
+        error "Failed to unhold '$app'"
+        continue
+    }
     $install = @{}
     $json | Get-Member -MemberType Properties | ForEach-Object { $install.Add($_.Name, $json.($_.Name)) }
+    if (!$install.hold) {
+        info "'$app' is not held."
+        continue
+    }
     $install.hold = $null
     save_install_info $install $dir
     success "$app is no longer held and can be updated again."
@@ -65,8 +73,8 @@ exit $exitcode
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU3SrNIC7GAXmcSbEZPHtbqMDE
-# hpOgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUfkDTmFfwTLWeJrhVSbPP5yNM
+# rxCgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -85,11 +93,11 @@ exit $exitcode
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUz+7YVG5hlAE6/PJGcerWvQJwEBswDQYJKoZIhvcNAQEBBQAEggEA
-# XotSI/S1/CpaPbPJnDWeV1IpV5jEhWaaY0Qs8c9XIMsUk+N486HEEnBqyfEJxht+
-# 02GpbvVbLsTFeZQCMiRKRNFvuYF5WiNCod6642iZ8eNzTd4exScADQH5KR+DKo+t
-# kc+Zb3euZC9BO10k8o/3YMsITnQQ1x6kQ+VCwJJt2gko+KCpBpfqa1AcuNeBC7WB
-# 4TBMlw4cokZ1fwpMNLVEzCHhiwnv9YkIluy9OG8muIqVTZre4zbuCvYj5UAb659Z
-# jBDpQAL/hcsxTrMJvtEXjlxtcfZ5wp/yjyehNtLWap+BwFlVmfwRJDg2vbQtrzVN
-# QzxbraJNEKsGhHFVMxVnxQ==
+# 9w0BCQQxFgQUmck+c+thsw+uCMTfdd70OIHNhD8wDQYJKoZIhvcNAQEBBQAEggEA
+# fTZbQOZ9z3HJJTdltsqS5LGBKJXP/pEgjEXMOo9+A760+TFHG268iW5Tu7b/iFx6
+# mvNtYMl3txuodNHU1p81ozjYDJ2bjUFlZwsx8MhrkEHIb/1bA+A1oewxDlb361XZ
+# +T4VN4MQxmtnmfyUWSwJnCyKy7XlE+Q6tioX+K3omDj4mRDhdXlgyUpXJw/4DsEZ
+# RKqXMUtf4afXHpa7SXcpZSUVBXHmknCZUfUiCLfSzaF5R5K+tob8jEJ7Rw2ryNnr
+# Vt5DnabSSZDJ/RpC5U/KsFNbQ/YH+D/hFSfdnSK3ww1g0+Ci+EgmlxuRTh+Zk1fp
+# 0Id17w13JFrSogGdwn5cNw==
 # SIG # End signature block

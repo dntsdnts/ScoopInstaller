@@ -10,7 +10,7 @@ $defenderIssues = 0
 
 $adminPrivileges = ([System.Security.Principal.WindowsPrincipal] [System.Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
 
-if ($adminPrivileges) {
+if ($adminPrivileges -and $env:USERNAME -ne 'WDAGUtilityAccount') {
     $defenderIssues += !(check_windows_defender $false)
     $defenderIssues += !(check_windows_defender $true)
 }
@@ -19,18 +19,18 @@ $issues += !(check_main_bucket)
 $issues += !(check_long_paths)
 $issues += !(Get-WindowsDeveloperModeStatus)
 
-if (!(Test-HelperInstalled -Helper 7zip)) {
-    error "'7-Zip' is not installed! It's required for unpacking most programs. Please Run 'scoop install 7zip' or 'scoop install 7zip-zstd'."
+if (!(Test-HelperInstalled -Helper 7zip) -and !(get_config USE_EXTERNAL_7ZIP)) {
+    warn "'7-Zip' is not installed! It's required for unpacking most programs. Please Run 'scoop install 7zip'."
     $issues++
 }
 
 if (!(Test-HelperInstalled -Helper Innounp)) {
-    error "'Inno Setup Unpacker' is not installed! It's required for unpacking InnoSetup files. Please run 'scoop install innounp'."
+    warn "'Inno Setup Unpacker' is not installed! It's required for unpacking InnoSetup files. Please run 'scoop install innounp'."
     $issues++
 }
 
 if (!(Test-HelperInstalled -Helper Dark)) {
-    error "'dark' is not installed! It's required for unpacking installers created with the WiX Toolset. Please run 'scoop install dark' or 'scoop install wixtoolset'."
+    warn "'dark' is not installed! It's required for unpacking installers created with the WiX Toolset. Please run 'scoop install dark' or 'scoop install wixtoolset'."
     $issues++
 }
 
@@ -60,8 +60,8 @@ exit 0
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUnBfAjI6sU8MPdqHHiro6Isnx
-# W9OgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU4WtOqtIxfBPmboFTNXHBNMai
+# 3EigggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -80,11 +80,11 @@ exit 0
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUDWqbL2tzrY6Hd0WpD9+8GhpoUGIwDQYJKoZIhvcNAQEBBQAEggEA
-# iPmJ+j8x7KskvRnkrL9WA9qz4UkTsTW+l9Q1oPsHEafKus07z71DCeWUh2G7tL5p
-# Beh1qk2LrJ7Cr+vanB1JP7VO5fCsBQvL7YovSwzWR4XweUjJ2bCNNYmdLlrEHH8y
-# SyG/pN5WrE6Db6+Js1Kau/nmt+dJdUlse1immvgvi0768k252PPBDkb6b+4GYEsV
-# M2JkyC3kAz+Q5q5/CQIQlG8hMkLeMSMJNZ1VA/F71x4/GfnCcXqHjpQNatT0NUvk
-# 5WixuoX0bb2QKs+dgSRDXkbE13YbesLKSaofnnJrfEMySF0uaRJlI24XQPh10trT
-# KtyhgQtrpZ+xtx/7/mVxoA==
+# 9w0BCQQxFgQU6XE4sJDwSk8GW2Sr0k+6OOk+sJowDQYJKoZIhvcNAQEBBQAEggEA
+# XKYHmPWNJdhsKXJVyWtS60sFlljRsZq7xKR2gl6oJZix5zD2Kbw8OTbqTcJzUPgB
+# DbP1X/P1nHg/AxEzVcwwHFZ8+n0Dd0QOdMWm8xj71IcQ4bnxymCtjqHaVWCBT5PQ
+# 1mJ3Hjx/XAULmCWeISRCJOrKOQnX6tMaYWsKcB/Yy+Nl2cvJMrmea2nVUxi2kJZV
+# ZJnV6ffaisuefiqihQJPhcQ0EB84zwKn5eL8rPW7fqtbeJLfIAKhvZt3hf/r/W/m
+# e7cD7XCNMhIOvWoQ0vw7V8ebPHdxv8bjHI3B355gHffFjHoHIHT0fPefcgXiCgPx
+# NNycTJVH9p8HNCtddPFbug==
 # SIG # End signature block

@@ -7,7 +7,7 @@ function parse_json($path) {
     try {
         Get-Content $path -Raw -Encoding UTF8 | ConvertFrom-Json -ErrorAction Stop
     } catch {
-        warn "Error parsing JSON at $path."
+        warn "Error parsing JSON at '$path'."
     }
 }
 
@@ -27,7 +27,7 @@ function url_manifest($url) {
     try {
         $str | ConvertFrom-Json -ErrorAction Stop
     } catch {
-        warn "Error parsing JSON at $url."
+        warn "Error parsing JSON at '$url'."
     }
 }
 
@@ -44,24 +44,23 @@ function Get-Manifest($app) {
         if ($bucket) {
             $manifest = manifest $app $bucket
         } else {
-            foreach ($bucket in Get-LocalBucket) {
-                $manifest = manifest $app $bucket
+            foreach ($tekcub in Get-LocalBucket) {
+                $manifest = manifest $app $tekcub
                 if ($manifest) {
+                    $bucket = $tekcub
                     break
                 }
             }
         }
         if (!$manifest) {
             # couldn't find app in buckets: check if it's a local path
-            $appPath = $app
-            $bucket = $null
-            if (!$appPath.EndsWith('.json')) {
-                $appPath += '.json'
-            }
-            if (Test-Path $appPath) {
-                $url = Convert-Path $appPath
+            if (Test-Path $app) {
+                $url = Convert-Path $app
                 $app = appname_from_url $url
                 $manifest = url_manifest $url
+            } else {
+                if (($app -match '\\/') -or $app.EndsWith('.json')) { $url = $app }
+                $app = appname_from_url $app
             }
         }
     }
@@ -156,7 +155,6 @@ function generate_user_manifest($app, $bucket, $version) {
 function url($manifest, $arch) { arch_specific 'url' $manifest $arch }
 function installer($manifest, $arch) { arch_specific 'installer' $manifest $arch }
 function uninstaller($manifest, $arch) { arch_specific 'uninstaller' $manifest $arch }
-function msi($manifest, $arch) { arch_specific 'msi' $manifest $arch }
 function hash($manifest, $arch) { arch_specific 'hash' $manifest $arch }
 function extract_dir($manifest, $arch) { arch_specific 'extract_dir' $manifest $arch}
 function extract_to($manifest, $arch) { arch_specific 'extract_to' $manifest $arch}
@@ -164,8 +162,8 @@ function extract_to($manifest, $arch) { arch_specific 'extract_to' $manifest $ar
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUp7giH0OfeYRd76d0zj5gAAqV
-# wEygggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUdMzlNtPffC0wrNH69uN1RbR8
+# kKugggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -184,11 +182,11 @@ function extract_to($manifest, $arch) { arch_specific 'extract_to' $manifest $ar
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUQaUytyhItYJVi/H7Jz31InTeSc0wDQYJKoZIhvcNAQEBBQAEggEA
-# oGw5xCuiq1jPDyPCGHoYYjErLHf5NmYwuMfxRcCKiEqx70ORH3u4zqdp8wZqME7/
-# NB3Mn7jZv45w+KtP9pb8NbCuO7GwoVAgTXJy7ylK6rAn0YxiskCFRPgt7wCRBE0Q
-# 0DNUfXxkEdaDHPHQG4BWWDe6OhsqVWpe/GJOaXPmIRljx3MAyn1x/xXbOo8RbLZX
-# detCIVOr6u2VolvSk7MIxTS/JVzvC9baXuBPUZdqOW5y2ZiMMRmplMYA5Cli30JV
-# RslfKDIDgsxi2ZVIBYiV0P/6yhAs+DeWPlF8BPlNJ82EXi7ENJkxYVrKXpXTv0Es
-# 8Pc3RIq/FPQU55iM6gmWWA==
+# 9w0BCQQxFgQUrNgzmzqYOozEXAUMfCwqiQt2iTUwDQYJKoZIhvcNAQEBBQAEggEA
+# r0Z9NKJniJsvfqhh3jfu/H+g/+0vG34czVNk12wjvnllNlD37ReII+ypdrVdF0bk
+# hLe1U+L/TSH/SWrI/MXDFy0xWDF64+vop3mUWsnlmXA+RdCZy6znQ96plx1O2jb4
+# OOrVtuIDyqb/KYLM77nDppym6Gjrz9XV222j3xVMjEVNimv6looXf7oEu5mV9w0/
+# cP/nE26cMLoMpBXAYlq4fXjmoFkAktYuwb3Zd7zpnxs05AJm+D1Jbno76aJ8vjRG
+# DuWFA/3R3P8WopX8RTEKrnmLG/ifheqa4z/iqYslepc6QzSFP3tmkh2mXC2foouo
+# VdVoKSfAwJiBIBH6JrKhKA==
 # SIG # End signature block

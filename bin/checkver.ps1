@@ -226,15 +226,21 @@ $Queue | ForEach-Object {
     $url = substitute $url $substitutions
 
     $state = New-Object psobject @{
-        app      = $name;
-        file     = $file;
-        url      = $url;
-        regex    = $regex;
-        json     = $json;
-        jsonpath = $jsonpath;
-        xpath    = $xpath;
-        reverse  = $reverse;
-        replace  = $replace;
+        app      = $name
+        file     = $file
+        url      = $url
+        regex    = $regex
+        json     = $json
+        jsonpath = $jsonpath
+        xpath    = $xpath
+        reverse  = $reverse
+        replace  = $replace
+    }
+
+    get_config PRIVATE_HOSTS | Where-Object { $_ -ne $null -and $url -match $_.match } | ForEach-Object {
+        (ConvertFrom-StringData -StringData $_.Headers).GetEnumerator() | ForEach-Object {
+            $wc.Headers[$_.Key] = $_.Value
+        }
     }
 
     $wc.Headers.Add('Referer', (strip_filename $url))
@@ -254,6 +260,7 @@ while ($in_progress -gt 0) {
     $in_progress--
 
     $state = $ev.SourceEventArgs.UserState
+    $result = $ev.SourceEventArgs.Result
     $app = $state.app
     $file = $state.file
     $json = $state.json
@@ -279,7 +286,13 @@ while ($in_progress -gt 0) {
         }
 
         if ($url) {
-            $page = (Get-Encoding($wc)).GetString($ev.SourceEventArgs.Result)
+            $ms = New-Object System.IO.MemoryStream
+            $ms.Write($result, 0, $result.Length)
+            $ms.Seek(0, 0) | Out-Null
+            if ($result[0] -eq 0x1F -and $result[1] -eq 0x8B) {
+                $ms = New-Object System.IO.Compression.GZipStream($ms, [System.IO.Compression.CompressionMode]::Decompress)
+            }
+            $page = (New-Object System.IO.StreamReader($ms, (Get-Encoding $wc))).ReadToEnd()
         }
         if ($script) {
             $page = Invoke-Command ([scriptblock]::Create($script -join "`r`n"))
@@ -407,8 +420,8 @@ while ($in_progress -gt 0) {
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUtzpBtjU5VF8URIBSC9zZB22K
-# xvSgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUJ2fh8msdabLUxKZBbjcOxx/u
+# v/ugggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -427,11 +440,11 @@ while ($in_progress -gt 0) {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQULgQi4svOXD0s+eOIB0E74q0wCXEwDQYJKoZIhvcNAQEBBQAEggEA
-# NAndc3I5RTIZgV3QU41NYzDLK16YrvpNCSNtbCnLcu8noZEKIc28nYKrkUu1VIgX
-# qTJcNJ4NGTTkGev4VThGkBooTDEO6Zmjr8jBTFBEPLYlDCN4T1nEIz8C8yCrIw2G
-# 9fu7QNU+WqfYGX5rOoZ81zOSADzpor4935nxuOO/cGN4Fin7qF1Ias/Su+FocFTT
-# uJUUFMXSB+lVJhp7iO7KD9xVe0urU1v99AD9jDqqH0rbIjiEzLIoTc6sxshAeSx6
-# IelKl1H7xmCOdJma0uSfAp7nXJ5Oo0brQM0pIYzeDHNCZP9rAJrEaCBYYSCOvY1/
-# yF/5oU+AYNOZ6fYfjXN8Tw==
+# 9w0BCQQxFgQU7t9BFfaJrkhta7KoE3e4l9iGyG4wDQYJKoZIhvcNAQEBBQAEggEA
+# n7ht+UsnGJNHmHK8sfepVJbaPgLCMxGfZquzyMbItshd4MnX+OypcBgyHm4pm9n8
+# fdfKS2FOsvVDlI4Cxy31VihXREq6oGGcTI8uWQpZRCjUm8ohCyhLc9bJ/QTor5T4
+# uAgZib2flQCnS9ChCMy4qo8vpZbi2ni7WJoylANQykUxrSPixBK+JTHAj54N8yvV
+# bbyCY4+4FQpnbqSgbuuY9GscgpnCDsMEljebo9wNX8FWGh4yfuKDa6fYE5f+BI12
+# X+K8uFNLMp03evZZtDKV+GeXL/n2EpXX+esShkjNQADxGRlkV2yYq4fl8eNzxn50
+# SbMZLTUg/gXlmKFG6TGGvQ==
 # SIG # End signature block

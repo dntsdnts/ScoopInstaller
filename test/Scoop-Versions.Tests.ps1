@@ -99,7 +99,7 @@ Describe 'versions comparison' -Tag 'Scoop' {
             Compare-Version 'nightly-20190801' 'nightly-20200801' | Should -Be 0
         }
 
-        It 'handles nightly versions with `update_nightly`' {
+        It "handles nightly versions with 'update_nightly'" {
             function get_config { $true }
             Mock Get-Date { '20200801' }
             Compare-Version 'nightly-20200801' 'nightly' | Should -Be 0
@@ -114,8 +114,8 @@ Describe 'versions comparison' -Tag 'Scoop' {
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU5KCbrGedwhDumnx2gc6HrzAC
-# H/KgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUyHi5ka3N+Ve0LiRoh/gnZIpw
+# 2LmgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -134,11 +134,11 @@ Describe 'versions comparison' -Tag 'Scoop' {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUGlDYSZpC0de51Xjhs+XDB77FRTkwDQYJKoZIhvcNAQEBBQAEggEA
-# apCuj5bsITHA88Gl4aKDBlc3tthIk0zVZG1n0j6yTMbZ5S6fRQGuB2QLxge1LViw
-# 877i84Ig40kei4+SmdUTMkCgRH/62B/Qr4e52inDJaI1p9OFvjYIjO7tlLFmiqUl
-# I2bT6jWEtccBPkNa4bTqg/fmHuRIDORVQOeeYDWnf7QtJ/hAmZZ1CYE/UE6RMfTE
-# o+w4INVIpNJginvBG1onXtEdGwqj5juvVmzt1k29DZgWQ0DCOZkgXVusU7c4lw6C
-# M+xfm6hMb254B8cvHoWYYpvnWF4Wamb4m/tmiYB/rBntOOsJCjSfW5dQKxVNCGKm
-# sQrvE18VXCwhjZECsC4y8w==
+# 9w0BCQQxFgQUSNYbSywwRHqimoan8yjKKx+Pf1QwDQYJKoZIhvcNAQEBBQAEggEA
+# lFNPXydHmYvkJ6GaRsnn9FVu9t/QEGQjPLetZfITF/C3Iw2yBIGyeSOxfxRFzHB/
+# DmCDatGB2o0ETvCL3vKJI79qG5sKUd+pfwoDDMEr1nAnCC2VJKIvt0DSUeUXMPev
+# eSj7s7tXzu27E2pymcgBsP0HEzliyIhGgpHLSS9YBAgKsaehgkfpWcu1WRGF4OGo
+# kW/Z1c2DUEwUcxNOYi9uWsXNnRwOdYFMdsEu1XzsY3GQO/OiJNNPqYykXFonlFx9
+# vYnZMyAcSsbXrAUxidIIGECmbqpBIYG+vt8J5oByYthFoBTMaK5o0VUU5qRJH5Aa
+# xY2sOTraVHt6wRNubiESFw==
 # SIG # End signature block

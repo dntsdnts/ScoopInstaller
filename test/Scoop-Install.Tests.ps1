@@ -1,6 +1,7 @@
 BeforeAll {
     . "$PSScriptRoot\Scoop-TestLib.ps1"
     . "$PSScriptRoot\..\lib\core.ps1"
+    . "$PSScriptRoot\..\lib\system.ps1"
     . "$PSScriptRoot\..\lib\manifest.ps1"
     . "$PSScriptRoot\..\lib\install.ps1"
 }
@@ -37,8 +38,6 @@ Describe 'is_in_dir' -Tag 'Scoop', 'Windows' {
     It 'should work correctly' {
         is_in_dir 'C:\test' 'C:\foo' | Should -BeFalse
         is_in_dir 'C:\test' 'C:\test\foo\baz.zip' | Should -BeTrue
-
-        is_in_dir 'test' "$PSScriptRoot" | Should -BeTrue
         is_in_dir "$PSScriptRoot\..\" "$PSScriptRoot" | Should -BeFalse
     }
 }
@@ -47,27 +46,28 @@ Describe 'env add and remove path' -Tag 'Scoop', 'Windows' {
     BeforeAll {
         # test data
         $manifest = @{
-            'env_add_path' = @('foo', 'bar')
+            'env_add_path' = @('foo', 'bar', '.', '..')
         }
         $testdir = Join-Path $PSScriptRoot 'path-test-directory'
         $global = $false
-
-        # store the original path to prevent leakage of tests
-        $origPath = $env:PATH
     }
 
     It 'should concat the correct path' {
-        Mock add_first_in_path {}
-        Mock remove_from_path {}
+        Mock Add-Path {}
+        Mock Remove-Path {}
 
         # adding
         env_add_path $manifest $testdir $global
-        Assert-MockCalled add_first_in_path -Times 1 -ParameterFilter { $dir -like "$testdir\foo" }
-        Assert-MockCalled add_first_in_path -Times 1 -ParameterFilter { $dir -like "$testdir\bar" }
+        Should -Invoke -CommandName Add-Path -Times 1 -ParameterFilter { $Path -like "$testdir\foo" }
+        Should -Invoke -CommandName Add-Path -Times 1 -ParameterFilter { $Path -like "$testdir\bar" }
+        Should -Invoke -CommandName Add-Path -Times 1 -ParameterFilter { $Path -like $testdir }
+        Should -Invoke -CommandName Add-Path -Times 0 -ParameterFilter { $Path -like $PSScriptRoot }
 
         env_rm_path $manifest $testdir $global
-        Assert-MockCalled remove_from_path -Times 1 -ParameterFilter { $dir -like "$testdir\foo" }
-        Assert-MockCalled remove_from_path -Times 1 -ParameterFilter { $dir -like "$testdir\bar" }
+        Should -Invoke -CommandName Remove-Path -Times 1 -ParameterFilter { $Path -like "$testdir\foo" }
+        Should -Invoke -CommandName Remove-Path -Times 1 -ParameterFilter { $Path -like "$testdir\bar" }
+        Should -Invoke -CommandName Remove-Path -Times 1 -ParameterFilter { $Path -like $testdir }
+        Should -Invoke -CommandName Remove-Path -Times 0 -ParameterFilter { $Path -like $PSScriptRoot }
     }
 }
 
@@ -126,8 +126,8 @@ Describe 'persist_def' -Tag 'Scoop' {
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUA+65WIRliqRtn7zLe/XwC0Vv
-# dXWgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUMPQnQL7QBA5SYah+E+KNgohQ
+# 5gagggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -146,11 +146,11 @@ Describe 'persist_def' -Tag 'Scoop' {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQU0UlIaAWZMtKg/TWpczfD1aj3E9IwDQYJKoZIhvcNAQEBBQAEggEA
-# Ma9OxMSv0Qpj9+Gsz3f4rut55TngZUwTIO9h3TEQcs0HIOu78AF7NF+Vykn5vTXv
-# lnelvmwh2JEwzNLp//Aj2ZLxd3+JJrQN2cIsUBvRAvB0YZDr/S+Wha5jxo3CFzYm
-# /zYS+praR9KK2aPQfHBFozmg+GJf5E8cUkGA/9O0tOIuvOy5qBLLv3JNNRB3bwRX
-# yTsN2tI3u2s/Adz+Xm1eqwviE8wznSw/ULeRL53xvTkMd75i2Re4OYqO8LYb7+eU
-# cpgxQFzo6H0iuCYN/odwi7de+s3wWTY0tGd0ju5oKoqphlo1eCtQ+JJx2X5Qkuey
-# 09k16BHiOv/AF3CJssHr0w==
+# 9w0BCQQxFgQUNdEQUo1zSmd2Via/MC4xSrU5IcwwDQYJKoZIhvcNAQEBBQAEggEA
+# DHrpNVBCmWt+QCNWLwuu9kiyy/cggWBgzCF3R8H93E/SyrALFV1ABjQ9N+QK2jb9
+# 9+zVfMCRsrKmgp9tV5SIaK2hBHz1Qk5oTyw707CLhG8iQ0n7L6JHoC0R5cIDe/Yf
+# RZrD4T22G9rRW7jpt+yQIhsgBcc/kFUJoOuFuZRnIi2NIbHp33HQsAYDqILSDGku
+# JgAWfpPD+r7/zSafgmuKpt76814HGwJYnEOEADPyygJUs3dLQgzsJ32GVCz+gvys
+# wqXJg/9bKmRZQFx62yZydzx7A7E/tFAhIUOaxMb6a2FqA4qFv4d5HXgpG1s/T66b
+# m1iX9Px44U0XOxH4vd2nKA==
 # SIG # End signature block

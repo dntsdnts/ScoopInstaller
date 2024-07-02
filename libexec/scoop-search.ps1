@@ -9,7 +9,7 @@ param($query)
 . "$PSScriptRoot\..\lib\manifest.ps1" # 'manifest'
 . "$PSScriptRoot\..\lib\versions.ps1" # 'Get-LatestVersion'
 
-$list = @()
+$list = [System.Collections.Generic.List[PSCustomObject]]::new()
 
 try {
     $query = New-Object Regex $query, 'IgnoreCase'
@@ -32,24 +32,90 @@ function bin_match($manifest, $query) {
         if ((strip_ext $fname) -match $query) { $fname }
         elseif ($alias -match $query) { $alias }
     }
+
+    if ($bins) { return $bins }
+    else { return $false }
+}
+
+function bin_match_json($json, $query) {
+    [System.Text.Json.JsonElement]$bin = [System.Text.Json.JsonElement]::new()
+    if (!$json.RootElement.TryGetProperty("bin", [ref] $bin)) { return $false }
+    $bins = @()
+    if($bin.ValueKind -eq [System.Text.Json.JsonValueKind]::String -and [System.IO.Path]::GetFileNameWithoutExtension($bin) -match $query) {
+        $bins += [System.IO.Path]::GetFileName($bin)
+    } elseif ($bin.ValueKind -eq [System.Text.Json.JsonValueKind]::Array) {
+        foreach($subbin in $bin.EnumerateArray()) {
+            if($subbin.ValueKind -eq [System.Text.Json.JsonValueKind]::String -and [System.IO.Path]::GetFileNameWithoutExtension($subbin) -match $query) {
+                $bins += [System.IO.Path]::GetFileName($subbin)
+            } elseif ($subbin.ValueKind -eq [System.Text.Json.JsonValueKind]::Array) {
+                if([System.IO.Path]::GetFileNameWithoutExtension($subbin[0]) -match $query) {
+                    $bins += [System.IO.Path]::GetFileName($subbin[0])
+                } elseif ($subbin.GetArrayLength() -ge 2 -and $subbin[1] -match $query) {
+                    $bins += $subbin[1]
+                }
+            }
+        }
+    }
+
     if ($bins) { return $bins }
     else { return $false }
 }
 
 function search_bucket($bucket, $query) {
-    $apps = apps_in_bucket (Find-BucketDirectory $bucket) | ForEach-Object { @{ name = $_ } }
+    $apps = Get-ChildItem (Find-BucketDirectory $bucket) -Filter '*.json' -Recurse
 
-    if ($query) {
-        $apps = $apps | Where-Object {
-            if ($_.name -match $query) { return $true }
-            $bin = bin_match (manifest $_.name $bucket) $query
+    $apps | ForEach-Object {
+        $json = [System.Text.Json.JsonDocument]::Parse([System.IO.File]::ReadAllText($_.FullName))
+        $name = $_.BaseName
+
+        if ($name -match $query) {
+            $list.Add([PSCustomObject]@{
+                Name = $name
+                Version = $json.RootElement.GetProperty("version")
+                Source = $bucket
+                Binaries = ""
+            })
+        } else {
+            $bin = bin_match_json $json $query
             if ($bin) {
-                $_.bin = $bin
-                return $true
+                $list.Add([PSCustomObject]@{
+                    Name = $name
+                    Version = $json.RootElement.GetProperty("version")
+                    Source = $bucket
+                    Binaries = $bin -join ' | '
+                })
             }
         }
     }
-    $apps | ForEach-Object { $_.version = (Get-LatestVersion -AppName $_.name -Bucket $bucket); $_ }
+}
+
+# fallback function for PowerShell 5
+function search_bucket_legacy($bucket, $query) {
+    $apps = Get-ChildItem (Find-BucketDirectory $bucket) -Filter '*.json' -Recurse
+
+    $apps | ForEach-Object {
+        $manifest = [System.IO.File]::ReadAllText($_.FullName) | ConvertFrom-Json -ErrorAction Continue
+        $name = $_.BaseName
+
+        if ($name -match $query) {
+            $list.Add([PSCustomObject]@{
+                Name = $name
+                Version = $manifest.Version
+                Source = $bucket
+                Binaries = ""
+            })
+        } else {
+            $bin = bin_match $manifest $query
+            if ($bin) {
+                $list.Add([PSCustomObject]@{
+                    Name = $name
+                    Version = $manifest.Version
+                    Source = $bucket
+                    Binaries = $bin -join ' | '
+                })
+            }
+        }
+    }
 }
 
 function download_json($url) {
@@ -96,43 +162,35 @@ function search_remotes($query) {
 (add them using 'scoop bucket add <bucket name>')"
     }
 
+    $remote_list = @()
     $results | ForEach-Object {
-        $name = $_.bucket
+        $bucket = $_.bucket
         $_.results | ForEach-Object {
             $item = [ordered]@{}
             $item.Name = $_
-            $item.Source = $name
-            $list += [PSCustomObject]$item
+            $item.Source = $bucket
+            $remote_list += [PSCustomObject]$item
         }
     }
-
-    $list
+    $remote_list
 }
+
+$jsonTextAvailable = [System.AppDomain]::CurrentDomain.GetAssemblies() | Where-object { [System.IO.Path]::GetFileNameWithoutExtension($_.Location) -eq "System.Text.Json" }
 
 Get-LocalBucket | ForEach-Object {
-    $res = search_bucket $_ $query
-    $local_results = $local_results -or $res
-    if ($res) {
-        $name = "$_"
-
-        $res | ForEach-Object {
-            $item = [ordered]@{}
-            $item.Name = $_.name
-            $item.Version = $_.version
-            $item.Source = $name
-            $item.Binaries = ""
-            if ($_.bin) { $item.Binaries = $_.bin -join ' | ' }
-            $list += [PSCustomObject]$item
-        }
+    if ($jsonTextAvailable) {
+        search_bucket $_ $query
+    } else {
+        search_bucket_legacy $_ $query
     }
 }
 
-if ($list.Length -gt 0) {
+if ($list.Count -gt 0) {
     Write-Host "Results from local buckets..."
     $list
 }
 
-if (!$local_results -and !(github_ratelimit_reached)) {
+if ($list.Count -eq 0 -and !(github_ratelimit_reached)) {
     $remote_results = search_remotes $query
     if (!$remote_results) {
         warn "No matches found."
@@ -146,8 +204,8 @@ exit 0
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUaoLDYF0IhYFXm/YnFYAjUrt9
-# kbmgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUXHgTy1sl0tIJVc9/6MZAD172
+# q/CgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -166,11 +224,11 @@ exit 0
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUPmDx2+Me7QRcH6CTM8G+0FvnvUkwDQYJKoZIhvcNAQEBBQAEggEA
-# YfiK9bZqZR4u6P+rWGXy/14Do7HDyPsgbpPtWDbqhniiU7I9Rc7iIsws06//g9fP
-# bVytXMVxB+HB0eP8MmmWkQ0lifgUrifezRLyxujgunYTju7lrHNhr+MKMx3SJyD/
-# O6swspT/YjQp+Zu+7lIBY+4dnbkPB+/5ogztrsjDOsB/A+idBqtODatYcJG9PYZt
-# t8fzN20b35v2/BcSSP/UX0ANZM7t6STaQYRgeKDhnhvD6WlbJOwTrBFUiqBR9iwm
-# vxd4cnm1eKG351CgY0XrqBc2QG7M10MqtmAqpYyLZY7S5Zpnp9YS3qHIPn+x9+/L
-# 0/yASnCPyCWZZ7MWLIvaOA==
+# 9w0BCQQxFgQUiGWeNAlZoiqG5LD7R7Ouz4ISlQ0wDQYJKoZIhvcNAQEBBQAEggEA
+# pPJNq4XIQJY3bGtQW5018VsbFnGLcI84ohMsr5zwlSjw3Tj8o76OqZ4yVHsEc1eF
+# 0KVUFgnP02FGD71VGMSDY98c/umsLm37lmbvb/l33+2TihrekohaHCyBrNcd4rkC
+# OUjZ8VliIqRxzoTG3xlKHUHaU/n3WB9yg+OjDpVwEqein5tdEKIy+QGHlFGw1Aiq
+# uiX6hG/17gryyOB/o9eMMIG2pIqX4sjG4mJOS3vG2nw971BzB4HfC6AK1Pwies6Z
+# HInQ2XpYt/MbUCrbVnjgbLYKJLX1TXvfgnmYNCngCxyr3PCCRTNyOOQaeVwTC2S4
+# PeI9Xz7oFOScx2C1R+OWXg==
 # SIG # End signature block

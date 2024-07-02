@@ -12,6 +12,7 @@ param(
 )
 
 . "$PSScriptRoot\..\lib\core.ps1"
+. "$PSScriptRoot\..\lib\system.ps1"
 . "$PSScriptRoot\..\lib\install.ps1"
 . "$PSScriptRoot\..\lib\shortcuts.ps1"
 . "$PSScriptRoot\..\lib\versions.ps1"
@@ -98,16 +99,18 @@ if ($purge) {
     if ($global) { keep_onlypersist $globaldir }
 }
 
-remove_from_path (shimdir $false)
-if ($global) { remove_from_path (shimdir $true) }
+Remove-Path -Path (shimdir $global) -Global:$global
+if (get_config USE_ISOLATED_PATH) {
+    Remove-Path -Path ('%' + $scoopPathEnvVar + '%') -Global:$global
+}
 
 success 'Scoop has been uninstalled.'
 
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUcvhv+qYjPxBUrljwY0viFtQv
-# mj6gggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUsIX3iXag7LttGu7MUji7PRqi
+# ItmgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -126,11 +129,11 @@ success 'Scoop has been uninstalled.'
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUechCV6mcY3KIY8yhlMUiZFpNJwIwDQYJKoZIhvcNAQEBBQAEggEA
-# BXyB9kKkkoZzU8hpQI5HsniS7D85K98TtL5qaZhx0NuedGYHze3dOux1fGJO5vbN
-# v/pnu097qyqC/ah8wy7IbX3/aHJ4/H+3wEMRijQjam8egvBVWHFI9c2IMrTr1MOo
-# hMdyP/lUPs+Qm2GMv1pB8aRUSSBPzyTiSTHt/LeJtyudtlY8BNNiiPSCxsWsS591
-# FG0PVxT4BPGv28sxcQoTh7VpPUNGY74VhZ10nMYQ6SRfd4Z1CqAym4KveNdgmyEg
-# wV22pigDCxl+6WjFyWjZsaga+T6vj8Lqu+GPnf9uLqn45SNaXSBm0pybb5j87XEK
-# duoEBXH8tK4Es+WiAvbiNA==
+# 9w0BCQQxFgQUacA+bGpiRtPi/w3pctZvMvq7D5YwDQYJKoZIhvcNAQEBBQAEggEA
+# TEzv4r4guf1luButb/YnGOVBSRkf9plACPu7/DKdc3JquJd9An7ojsPOXD3Pha4I
+# 9tubuRHsIfBMkivDQXh9Wio0JQHVKwcGkmCHhd+t/4Q9X1ZDQiOX4/iSKKdHuGXX
+# MffNCNsZNbTdHKw2//nSw/ZIDOFUWyNaNRqKirEeCNfGny/feY/u47wW586EJMHQ
+# iQ5X4iT1Zc375rB2KO/yBpb6WLqndcXSxnkO7lj/k+U3zmhgnlXp6lPJ1n6pjK/M
+# 0bYd9Pa4uBmivJ1Vfvwn+Nla5fGQuaFVkqDkTPLCdr+9qDYlp+3WUMbFipDJXFle
+# HsCUP4z/ckOO75PQ2YsV6A==
 # SIG # End signature block

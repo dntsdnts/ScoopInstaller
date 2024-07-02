@@ -25,6 +25,7 @@
 . "$PSScriptRoot\..\lib\json.ps1" # 'autoupdate.ps1' 'manifest.ps1' (indirectly)
 . "$PSScriptRoot\..\lib\autoupdate.ps1" # 'generate_user_manifest' (indirectly)
 . "$PSScriptRoot\..\lib\manifest.ps1" # 'generate_user_manifest' 'Get-Manifest' 'Select-CurrentVersion' (indirectly)
+. "$PSScriptRoot\..\lib\system.ps1"
 . "$PSScriptRoot\..\lib\install.ps1"
 . "$PSScriptRoot\..\lib\decompress.ps1"
 . "$PSScriptRoot\..\lib\shortcuts.ps1"
@@ -56,7 +57,7 @@ if (is_scoop_outdated) {
     if ($opt.u -or $opt.'no-update-scoop') {
         warn "Scoop is out of date."
     } else {
-        scoop update
+        & "$PSScriptRoot\scoop-update.ps1"
     }
 }
 
@@ -130,8 +131,8 @@ exit 0
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU4Zyy9W7Xu+FOtqh8O4lHNSxq
-# d8SgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU2ni/6BNn9P4fEMMldlhO29IJ
+# uhGgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -150,11 +151,11 @@ exit 0
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUcDdcRLZsrziCT/yz6dyQg5AwtVQwDQYJKoZIhvcNAQEBBQAEggEA
-# rvu3TOFTtIqr7+jQ7ji2l00ELqkLy7se4CJNuZGnX9WLfMO5V2JvWICCX9viGaR0
-# lNmFcjU4JCFFIXi6zuJonPoNYuDwTLk9XzfALqAnL1MHfA1Ty6jY+NotyVktg9+x
-# MHnNt1I2A9JY6DC2nN2Y+vdYrax7mbSdSB9J731bb/NhH9wtM//waLqiymBMaQqK
-# 9AmdjdWH9Q4jthVEtRP6BELsXmIGBfozbEfvH3KIEdJ6nPGipjN0M1VekIpeDx1i
-# wuvylIlbYLcsx9yffjUdIkfKFjg4jdpeOuInBUQ1OneUU18BLlh+SXRy9Pu9qE5D
-# snIkqleNljdTPsVBeAp4Yg==
+# 9w0BCQQxFgQUW0mT+8LG6q/oOsF4WF8lWNgW1SkwDQYJKoZIhvcNAQEBBQAEggEA
+# FLa5gI6iPbuzLXb378kNIEvafyz+QPygID9+4ZD2LTA5q9w2sqfTvKIUCM8FpmIs
+# VyWL7mRvgkH/AMn7OtN839Myh5XNIBHYKW/HgisKj/QQoNChKE3jfLqo9WFoQfr9
+# uA4nA2p3imkaKgXT/leAe9GtdqqxST1jzXWMk8M3lxFORdV7ADKMenzyZ8BUOw4/
+# NdfIA45n3ajOQcfILYY56fsYykRV9WtY6oERnbWW/ZCDG9u9qyQKIQpAt6pbNVnZ
+# f9AiZpMYD24uIMzBAbNSaVM26ogLyPDJQmGbU8szV0aylE2Ub9MaNbKC7BIxKXr6
+# k2modbxSBpgw4n9hGNUYlQ==
 # SIG # End signature block

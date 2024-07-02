@@ -43,7 +43,7 @@ if (is_scoop_outdated) {
     if ($opt.u -or $opt.'no-update-scoop') {
         warn "Scoop is out of date."
     } else {
-        scoop update
+        & "$PSScriptRoot\scoop-update.ps1"
     }
 }
 
@@ -57,7 +57,7 @@ foreach ($curr_app in $apps) {
     $app, $bucket, $version = parse_app $curr_app
     $app, $manifest, $bucket, $url = Get-Manifest "$bucket/$app"
 
-    info "Starting download for $app..."
+    info "Downloading '$app'$(if ($version) { " ($version)" }) [$architecture]$(if ($bucket) { " from $bucket bucket" })"
 
     # Generate manifest if there is different version in manifest
     if (($null -ne $version) -and ($manifest.version -ne $version)) {
@@ -70,7 +70,7 @@ foreach ($curr_app in $apps) {
     }
 
     if(!$manifest) {
-        error "Couldn't find manifest for '$app'$(if($url) { " at the URL $url" })."
+        error "Couldn't find manifest for '$app'$(if($bucket) { " from '$bucket' bucket" } elseif($url) { " at '$url'" })."
         continue
     }
     $version = $manifest.version
@@ -141,8 +141,8 @@ exit 0
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUQxxlmSquRSUMRc1jdalocXlz
-# DSegggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU70pJXEVqnBAnpo2I6b2GzSif
+# eACgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -161,11 +161,11 @@ exit 0
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUUFZOiTSkczo9gfSpROWkFCXizqYwDQYJKoZIhvcNAQEBBQAEggEA
-# DJz0WQ+TvvBHgdHQ/UBd3zgKhcDJHmKVSCx1q8Rood/0t7DAaViAD1+6rexANZ7+
-# 7Gr9XQ6OBi5K9o8qRdvD+RpexZhZbhfWIwTnCtXI+FDGG4mst0lSZfV1O9OSW0W+
-# JKnEsj4vDySzrbukY8Z0t3dB7WgYoh2csNsr2aRwQq/D/S7c71apZwhabTgb/uL6
-# ewAiJhHXFM48+Pku/0g5vF1ZPti6RGAxr1DfZ55fCu5fWIzLueRN3AYDOlsNoqnc
-# Vkc385OYnwnImDvyVEgket0T6dHQyNndZQ7xdDwymabQkPucJNRtt/ynRjiP3szw
-# lF2cvtPu4zVQJUdihuFozg==
+# 9w0BCQQxFgQUzEho/I3r+TuxYHnUCcM8dj+gS/4wDQYJKoZIhvcNAQEBBQAEggEA
+# voTyNLH7SkdkSy7aADn+BwuyAujvZfAjna6YZrtNBa+OBKflfd8VzfM/vosvNWF7
+# J/Eqg3xmwRg687RJaVkWcYCsmvFh0Yubkn/JZBUBMtsX9E+WRAmp8kK+ayQRukHV
+# IOWLo6rIm9FbryA2B/c74iaDw0DOGgHViWo9xDD0epak8T0YfSUTAAZp1X7/+1uX
+# Udn9oieuD0fPp/wnPFUi8g0/3Oc0H3gLZgI8KqizZrYX1C2iog6R06usn88YNH+r
+# qF3oBfLqWh7mZ3SUgSc2xb1o5l+nUA4nKkC7U5wGcOkIghcrQcUt+k3mEwSxNFG2
+# fiOwAJ+5JkLePmSNQ8O9aw==
 # SIG # End signature block

@@ -8,7 +8,7 @@ BeforeAll {
 Describe 'Manipulate Alias' -Tag 'Scoop' {
     BeforeAll {
         Mock shimdir { "$TestDrive\shims" }
-        Mock set_config { }
+        Mock set_config {}
         Mock get_config { @{} }
 
         $shimdir = shimdir
@@ -23,32 +23,33 @@ Describe 'Manipulate Alias' -Tag 'Scoop' {
         & $alias_file | Should -Be 'hello, world!'
     }
 
-    It 'Does not change existing alias if alias exists' {
+    It 'Does not change existing file if its filename same as alias name' {
         $alias_file = "$shimdir\scoop-rm.ps1"
+        Mock abort {}
         New-Item $alias_file -Type File -Force
         $alias_file | Should -Exist
 
-        add_alias 'rm' 'test'
-        & $alias_file | Should -Not -Be 'test'
+        add_alias 'rm' '"test"'
+        Should -Invoke -CommandName abort -Times 1 -ParameterFilter { $msg -eq "File 'scoop-rm.ps1' already exists in shims directory." }
     }
 
     It 'Removes an existing alias' {
         $alias_file = "$shimdir\scoop-rm.ps1"
-        add_alias 'rm' '"hello, world!"'
-
         $alias_file | Should -Exist
         Mock get_config { @(@{'rm' = 'scoop-rm' }) }
+        Mock info {}
 
         rm_alias 'rm'
         $alias_file | Should -Not -Exist
+        Should -Invoke -CommandName info -Times 1 -ParameterFilter { $msg -eq "Removing alias 'rm'..." }
     }
 }
 
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUNN2Qlr+Q92GXKt1+j/mx92vI
-# 6migggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU9El0S88tiyF5fUNlZxZJvXHW
+# ALGgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -67,11 +68,11 @@ Describe 'Manipulate Alias' -Tag 'Scoop' {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUkXPH+wPk6Vy9GBJkDM7LhFVZJvEwDQYJKoZIhvcNAQEBBQAEggEA
-# gyvme/rGfj0pEXfrJDje/5To08J5mKoMtWoqVfVivIT4jvmHTrCY/BrygpV3iijV
-# lY4jida9tM7iyOf2OI9sa3GNxb5CQDVfyUp+I9BGqwnLkToeUR8O5353Ynhb5ggZ
-# gQ9A4qB32i5HkDsDtPTPjZYQNL7SJcqpsUgZvp/hPnnsV4tueDXWwfTqZkVrJmt+
-# CgmB9+EaId7jKmw+nBNvqv2XxRqfkW5NtVM0/+SClhCcx4t6Qlq1XjoeYbGl2dza
-# jJB1BOM3VR7fhcCN5BEuNRJ2V1mYlS2H5euQxVQ6vDaa8Gf6DJfo8cXeXXwZAOwy
-# hcZLoGNVB8bDpBipuBTMYQ==
+# 9w0BCQQxFgQUwul8TCk9faAniA+QDMyzoPVowqwwDQYJKoZIhvcNAQEBBQAEggEA
+# ViUs93hUrTDgBHVw/Ixg8DtIubllAKZvwMDVUlBciBuANm7eXqNeVSynntT/JRHh
+# cPbTnummFgTxQn+IWdHgS9E1IIBFKG2tq9A2M7NmeMhti+iqAcqcGeAPR7LqI6Md
+# bDYFbeBcpTji3fBZHNZIaSJ6JfusRwbNtiZSdO3klYjcr+W51lYJWm0QxZSaUbtc
+# INBDTJLHg7r8Yfc7yauuUf/VrH/SE3TGm6VRSuyenZ+GyQ9pRjQlIOLJ3h6Ej1oy
+# zzaB9jweNoK0slx+1mq1mOgu7XGDQSYFZNc/j9uQN12FsDS1a91pZ4/1jysSKgde
+# PdQ7ERBbeDDxd4xih4FTDw==
 # SIG # End signature block

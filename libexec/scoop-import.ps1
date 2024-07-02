@@ -34,20 +34,19 @@ foreach ($item in $import.buckets) {
 }
 
 foreach ($item in $import.apps) {
+    $instArgs = @()
+    $holdArgs = @()
     $info = $item.Info -Split ', '
-    $global = if ('Global install' -in $info) {
-        ' --global'
-    } else {
-        ''
+    if ('Global install' -in $info) {
+        $instArgs += '--global'
+        $holdArgs += '--global'
     }
-    $arch = if ('64bit' -in $info -and '64bit' -ne $def_arch) {
-        ' --arch 64bit'
+    if ('64bit' -in $info -and '64bit' -ne $def_arch) {
+        $instArgs += '--arch', '64bit'
     } elseif ('32bit' -in $info -and '32bit' -ne $def_arch) {
-        ' --arch 32bit'
+        $instArgs += '--arch', '32bit'
     } elseif ('arm64' -in $info -and 'arm64' -ne $def_arch) {
-        ' --arch arm64'
-    } else {
-        ''
+        $instArgs += '--arch', 'arm64'
     }
 
     $app = if ($item.Source -in $bucket_names) {
@@ -58,18 +57,18 @@ foreach ($item in $import.apps) {
         $item.Source
     }
 
-    & "$PSScriptRoot\scoop-install.ps1" $app$global$arch
+    & "$PSScriptRoot\scoop-install.ps1" $app @instArgs
 
     if ('Held package' -in $info) {
-        & "$PSScriptRoot\scoop-hold.ps1" $($item.Name)$global
+        & "$PSScriptRoot\scoop-hold.ps1" $item.Name @holdArgs
     }
 }
 
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUsTr9LHTUi5jFve1+Zd41iZ69
-# J8igggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUhmV2JEfiNJTcr9L4I0H0FS22
+# DamgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -88,11 +87,11 @@ foreach ($item in $import.apps) {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUFKZim4H7RZoSrMyw69TRBOoGEnIwDQYJKoZIhvcNAQEBBQAEggEA
-# WYLsOCQiEImvJtXBxEoTEtRlrJEhTVxjXoE47cGpF0JJ7I1WEiQ62nkGDtxE2HhU
-# nK6I8fHfrUjXiDIumQ73K8iDwxB5cTNpIckCu54J5LLhF9nIlpiDBtP8O0WEyPeI
-# ziwhe1NW6CaHFam4WI2lE18Fp6s43iGD2gVdiD5601SUqy7OBuOCiCiNv/gZHIgt
-# 1kl4jB+CIHUzzNOnepzBpUSQN7yo8ejVy6jwCcBWeXH2FC0HR9UZKDPpplx0W1En
-# PcUPvFjWyp9C1K6dQD9s0l5iIB0DUPgL/fUxnoTRUnuvK+ekU1FU5PA87MmL/ena
-# TKu5TiSi787/j8eesRdkXA==
+# 9w0BCQQxFgQUKP8y5ehoHLdlddIikaxLFga0uHAwDQYJKoZIhvcNAQEBBQAEggEA
+# AA1F5SvMjUHzeNYDEwCxe2UQQZcEH4x08Xvd4nl/FJbfzAeWBQUYGUqT5OFv8PRh
+# hmy9aqnDEAAnypOC2SJ7XfY2ClPAlwT8IN630QEDjC3GBTOxxFqmQ+57ZscP85bq
+# ZirU/Nui38fGnWuwsZqqdFspy7mofeEQ8ZX8ZfTMyks18NgtSQFD76hUe8+Lqr5x
+# aBrLuWK7/xrmzq/dpAbAIliu5ZyspLGH3CAhb1iRJg1OuBjUXMGTfp9k2APcFcFf
+# 7Ghs7ko8pWTRZDBoWBxPilK2ebGwwLNc2pXr9Gf0+D4XrTj4VYbEDnw9Qj1SsHE4
+# 0ltd7IsSg66Cjcc2IKqjYg==
 # SIG # End signature block

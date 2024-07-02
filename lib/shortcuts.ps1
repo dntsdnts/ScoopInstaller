@@ -5,16 +5,16 @@ function create_startmenu_shortcuts($manifest, $dir, $global, $arch) {
         $target = [System.IO.Path]::Combine($dir, $_.item(0))
         $target = New-Object System.IO.FileInfo($target)
         $name = $_.item(1)
-        $arguments = ""
+        $arguments = ''
         $icon = $null
-        if($_.length -ge 3) {
+        if ($_.length -ge 3) {
             $arguments = $_.item(2)
         }
-        if($_.length -ge 4) {
+        if ($_.length -ge 4) {
             $icon = [System.IO.Path]::Combine($dir, $_.item(3))
             $icon = New-Object System.IO.FileInfo($icon)
         }
-        $arguments = (substitute $arguments @{ '$dir' = $dir; '$original_dir' = $original_dir; '$persist_dir' = $persist_dir})
+        $arguments = (substitute $arguments @{ '$dir' = $dir; '$original_dir' = $original_dir; '$persist_dir' = $persist_dir })
         startmenu_shortcut $target $name $arguments $icon $global
     }
 }
@@ -29,11 +29,11 @@ function shortcut_folder($global) {
 }
 
 function startmenu_shortcut([System.IO.FileInfo] $target, $shortcutName, $arguments, [System.IO.FileInfo]$icon, $global) {
-    if(!$target.Exists) {
+    if (!$target.Exists) {
         Write-Host -f DarkRed "Creating shortcut for $shortcutName ($(fname $target)) failed: Couldn't find $target"
         return
     }
-    if($icon -and !$icon.Exists) {
+    if ($icon -and !$icon.Exists) {
         Write-Host -f DarkRed "Creating shortcut for $shortcutName ($(fname $target)) failed: Couldn't find icon $icon"
         return
     }
@@ -51,11 +51,11 @@ function startmenu_shortcut([System.IO.FileInfo] $target, $shortcutName, $argume
     if ($arguments) {
         $wsShell.Arguments = $arguments
     }
-    if($icon -and $icon.Exists) {
+    if ($icon -and $icon.Exists) {
         $wsShell.IconLocation = $icon.FullName
     }
     $wsShell.Save()
-    write-host "Creating shortcut for $shortcutName ($(fname $target))"
+    Write-Host "Creating shortcut for $shortcutName ($(fname $target))"
 }
 
 # Removes the Startmenu shortcut if it exists
@@ -63,10 +63,10 @@ function rm_startmenu_shortcuts($manifest, $global, $arch) {
     $shortcuts = @(arch_specific 'shortcuts' $manifest $arch)
     $shortcuts | Where-Object { $_ -ne $null } | ForEach-Object {
         $name = $_.item(1)
-        $shortcut = "$(shortcut_folder $global)\$name.lnk"
-        write-host "Removing shortcut $(friendly_path $shortcut)"
-        if(Test-Path -Path $shortcut) {
-             Remove-Item $shortcut
+        $shortcut = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath("$(shortcut_folder $global)\$name.lnk")
+        Write-Host "Removing shortcut $(friendly_path $shortcut)"
+        if (Test-Path -Path $shortcut) {
+            Remove-Item $shortcut
         }
     }
 }
@@ -74,8 +74,8 @@ function rm_startmenu_shortcuts($manifest, $global, $arch) {
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUXJ34x9Nb+ZMXFFLjvUlKP7sO
-# 4jSgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUd6uvVu8nR+Vu1oR9PmilyjJe
+# FdSgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -94,11 +94,11 @@ function rm_startmenu_shortcuts($manifest, $global, $arch) {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUxg6DTT4X1vSRSbe2V05K4estFuQwDQYJKoZIhvcNAQEBBQAEggEA
-# DR0TNtllH4HkOeJwhr35tpCJf7BShlp/Zx/0zT0Hp5Z+oo24raOWw/yorpSi4R5l
-# pkfSEdZn8s2TvjwMq4JXv06bKCkmRBij/mv5j+YJCOsjN2vL3QS78EJt49Ap8maU
-# UYNd0FBOG0wplT+eOwf3fr0U9x6iEc1s0cXbCoaEI4LUbD4Wt/DLW1S7bltcbCfd
-# jtgpK945Fkqca6T5NWCjasC3z9ILCLW/HABxbhKJSlbumvoTMx0UNHMJjBnuKMrq
-# ENVT/qXF8tXtcTR0J40KadRI+biLCUDAjSLDXQAC813fWcZXlBOu0dlj4acKrBPK
-# /EXXWDvS5cuKu3Xl8yH1Pw==
+# 9w0BCQQxFgQUqo3AUqA677kkWelTpI8S/p4jMt8wDQYJKoZIhvcNAQEBBQAEggEA
+# E/5rGwYJu3YAR8mnIMErfXq8ocVmE4R+U3vIjLMqdkYds3MkYVoCQsnKh+Z0Flli
+# MhuOz/Yt9cwKXAC23WdcmbwM22+el4K0zqEdHg1GjFRxIFSYwpqHxI3/HZ67tpZG
+# OQ6rsCRTvNHlBIUAJysR6302Sd3KisuF/vtpQe4PGpqeCR4dZ6mcZHGxCKOrsFyw
+# +uJ02AVlfPq+MngHSy6pIyhwbVl766KpFGyNH0uSd3UiuyL80ElCWUJo07sBqBZw
+# E4HW7Vanl+O+MLKdIDBvrucLKPFVkG/xZwSHq3HO6T17pvOpiyeV5coVnk4dLEGx
+# MiFEru7w4DGKdgAvvZTC2g==
 # SIG # End signature block

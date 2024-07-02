@@ -1,13 +1,13 @@
 # copies fixtures to a working directory
 function setup_working($name) {
-    $fixtures = "$PSScriptRoot/fixtures/$name"
+    $fixtures = "$PSScriptRoot\fixtures\$name"
     if (!(Test-Path $fixtures)) {
         Write-Host "couldn't find fixtures for $name at $fixtures" -f red
         exit 1
     }
 
     # reset working dir
-    $working_dir = "$([IO.Path]::GetTempPath())ScoopTestFixtures/$name"
+    $working_dir = "$([IO.Path]::GetTempPath())ScoopTestFixtures\$name"
 
     if (Test-Path $working_dir) {
         Remove-Item -Recurse -Force $working_dir
@@ -22,8 +22,8 @@ function setup_working($name) {
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUZXHo63cLLJKBPyU8GBIPpukJ
-# mA6gggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUTMYDboZsOjH1IFmjYAj+YH6T
+# UX+gggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -42,11 +42,11 @@ function setup_working($name) {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUZV0FBUndTNdVXAyeFZYgf895msgwDQYJKoZIhvcNAQEBBQAEggEA
-# iWxftOfbaV3AvMaOUFZVpNSwHxpbaRq2bov2IKXEkePPLkt2ozyFu6xIPcwMIN+K
-# 8Ql/Bqs8kXhav8sog2fzf/oMPDYvwrEDXr3vEahE4/t8S584mDR5sonXLwUkNyTP
-# UcfAFFK8NgAhEPfTHJrKvWiQYDY14q4/NoiwaA84VU7xeE8/G4cRLrayVxkj8bDq
-# GrfaBRWZ2GqnHc5bqaQ1Zj8PG5V82+NRGa+ruBo8FjPVKxc/DNzBA4Z0Ksrzhkd/
-# CM5ghWYlIq3ENAlgl1liE/6wNgUFi3Jatuxjxn+zePI9QwnZbIUr4oPFQ5poDrBY
-# qazgWqSTMZm2mVqQMfAzGQ==
+# 9w0BCQQxFgQU3F1c7EzkHQ9ZJWsYUFcq5Uzs2mQwDQYJKoZIhvcNAQEBBQAEggEA
+# Rp50bLCeT5tI1ECaKJj6vTUNpl/CxH+K7X2+nI27c0vpP1CQpZ1x7m2SAwwyqlmC
+# DqswCaPo9qZiS4maOuggNq/0UEmkPpd2Z+IJbTDR88W1qmXH7IRcze3t8ubnTo4/
+# yhK0lV04wWdpI6mQJMZTIUaYArrkfF/z3N+fKcZxeFO29/1YCEaecaKCyLEe9GFl
+# gz4mO96ekIDjKD+lEPMguh/ShZvYQMVwnzONIgg/83p+8YbgzDChzVb5jvuIZ84k
+# AUssGtVKmu49fZgzEOfQVoZGM9UNARPP7c6nB6hbXW5XIZA2GQ4H5G8HF5041umx
+# anqHTCGvfUFbUmtNO/9+7A==
 # SIG # End signature block

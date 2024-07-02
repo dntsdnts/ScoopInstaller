@@ -44,13 +44,16 @@ function add_alias($name, $command) {
     # get current aliases from config
     $aliases = init_alias_config
     if ($aliases.$name) {
-        abort "Alias $name already exists."
+        abort "Alias '$name' already exists."
     }
 
     $alias_file = "scoop-$name"
 
     # generate script
     $shimdir = shimdir $false
+    if (Test-Path "$shimdir\$alias_file.ps1") {
+        abort "File '$alias_file.ps1' already exists in shims directory."
+    }
     $script =
     @(
         "# Summary: $description",
@@ -67,18 +70,18 @@ function add_alias($name, $command) {
 function rm_alias($name) {
     $aliases = init_alias_config
     if (!$name) {
-        abort 'Which alias should be removed?'
+        abort 'Alias to be removed has not been specified!'
     }
 
     if ($aliases.$name) {
-        "Removing alias $name..."
+        info "Removing alias '$name'..."
 
         rm_shim $aliases.$name (shimdir $false)
 
         $aliases.PSObject.Properties.Remove($name)
         set_config $script:config_alias $aliases | Out-Null
     } else {
-        abort "Alias $name doesn't exist."
+        abort "Alias '$name' doesn't exist."
     }
 }
 
@@ -116,8 +119,8 @@ exit 0
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUm0J4pF7SMePBy/HPSxE45z/7
-# X2WgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU7MnjN8nZW8/8Dg1V3tMhHuWC
+# O9egggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -136,11 +139,11 @@ exit 0
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUwMWCZCYSXU0d38rKEfMhdeQEmMIwDQYJKoZIhvcNAQEBBQAEggEA
-# gd/VTZcg8R9c27PW1zJkYkOetTLHAAfGTn7jJD0l0eoaecWkQU+z9TlJIw7FIldb
-# hbb97qfRvQCLFHO8WzJzBdghi9eKYkzpAuECi0vfMFsSD4IrMERjheA9VeKitMR4
-# gEuOeCaZFQ2gB/kAH6W0vRMNzw5nwIy/pnZFg0C25qOgmim4NmYOk25RBSQixtxN
-# ASLJQ6fHIiKqvnWBpS/fGBoBZO8JFFJW9YdIRi/2akF1GabWVZ8+/LMe5Oa1S5XX
-# HAmfqZCbKj7TCN+LtIZ+HPiscovgi1RS+pM5OjuhkuuujN/x/ZJPyvdClLyT4CHj
-# m9z0U9Fq0Bi6/wImsOPA5w==
+# 9w0BCQQxFgQUBuFXacIdYjzOJ2hekg+Lk0icbwUwDQYJKoZIhvcNAQEBBQAEggEA
+# vIyvY1rBenv8tR4xYHxVo3Vpq5XSVDOOs5Lzh/PYhd40QA71YYiLVf9ZdcBjvoSO
+# WLdacnGH51cl/lnz1UrQ4KR6rjLooGmbP3XQvXH276LfhKgNZcs2gHvBlRRekYsL
+# WlDIJgbWr5Z+HcdBYvDOMtNl3hQRPSIbCXS2R1fLKrF9KxHkKhLGx4V/SA02d1QK
+# lG2u9YAXZNxqOhKe/n+fzE+W1L+uzzowRv+qAhqLpo0Nyk6Py1YSkx+7LJhowdB6
+# MZqf/qRSp4c0UfhIsgP3SLfkOR7SZxcJqTmFibFPIiMc6F+LMVGIdvB6XZdWcDzU
+# wzN4cwgH+OKP6Hl9FenyQw==
 # SIG # End signature block

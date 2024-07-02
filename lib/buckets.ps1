@@ -58,10 +58,18 @@ function Get-LocalBucket {
     .SYNOPSIS
         List all local buckets.
     #>
-    $bucketNames = (Get-ChildItem -Path $bucketsdir -Directory).Name
+    $bucketNames = [System.Collections.Generic.List[String]](Get-ChildItem -Path $bucketsdir -Directory).Name
     if ($null -eq $bucketNames) {
         return @() # Return a zero-length list instead of $null.
     } else {
+        $knownBuckets = known_buckets
+        for ($i = $knownBuckets.Count - 1; $i -ge 0 ; $i--) {
+            $name = $knownBuckets[$i]
+            if ($bucketNames.Contains($name)) {
+                [void]$bucketNames.Remove($name)
+                $bucketNames.Insert(0, $name)
+            }
+        }
         return $bucketNames
     }
 }
@@ -99,11 +107,11 @@ function list_buckets {
         $bucket = [Ordered]@{ Name = $_ }
         $path = Find-BucketDirectory $_ -Root
         if ((Test-Path (Join-Path $path '.git')) -and (Get-Command git -ErrorAction SilentlyContinue)) {
-            $bucket.Source = git -C $path config remote.origin.url
-            $bucket.Updated = git -C $path log --format='%aD' -n 1 | Get-Date
+            $bucket.Source = Invoke-Git -Path $path -ArgumentList @('config', 'remote.origin.url')
+            $bucket.Updated = Invoke-Git -Path $path -ArgumentList @('log', '--format=%aD', '-n', '1') | Get-Date
         } else {
             $bucket.Source = friendly_path $path
-            $bucket.Updated = (Get-Item "$path\bucket").LastWriteTime
+            $bucket.Updated = (Get-Item "$path\bucket" -ErrorAction SilentlyContinue).LastWriteTime
         }
         $bucket.Manifests = Get-ChildItem "$path\bucket" -Force -Recurse -ErrorAction SilentlyContinue |
                 Measure-Object | Select-Object -ExpandProperty Count
@@ -113,7 +121,7 @@ function list_buckets {
 }
 
 function add_bucket($name, $repo) {
-    if (!(Test-CommandAvailable git)) {
+    if (!(Test-GitAvailable)) {
         error "Git is required for buckets. Run 'scoop install git' and try again."
         return 1
     }
@@ -130,7 +138,7 @@ function add_bucket($name, $repo) {
     }
     foreach ($bucket in Get-LocalBucket) {
         if (Test-Path -Path "$bucketsdir\$bucket\.git") {
-            $remote = git -C "$bucketsdir\$bucket" config --get remote.origin.url
+            $remote = Invoke-Git -Path "$bucketsdir\$bucket" -ArgumentList @('config', '--get', 'remote.origin.url')
             if ((Convert-RepositoryUri -Uri $remote) -eq $uni_repo) {
                 warn "Bucket $bucket already exists for $repo"
                 return 2
@@ -139,14 +147,14 @@ function add_bucket($name, $repo) {
     }
 
     Write-Host 'Checking repo... ' -NoNewline
-    $out = git_cmd ls-remote $repo 2>&1
+    $out = Invoke-Git -ArgumentList @('ls-remote', $repo) 2>&1
     if ($LASTEXITCODE -ne 0) {
         error "'$repo' doesn't look like a valid git repository`n`nError given:`n$out"
         return 1
     }
     ensure $bucketsdir | Out-Null
     $dir = ensure $dir
-    git_cmd clone "$repo" "`"$dir`"" -q
+    Invoke-Git -ArgumentList @('clone', $repo, $dir, '-q')
     Write-Host 'OK'
     success "The $name bucket was added successfully."
     return 0
@@ -169,7 +177,7 @@ function new_issue_msg($app, $bucket, $title, $body) {
     $bucket_path = "$bucketsdir\$bucket"
 
     if (Test-Path $bucket_path) {
-        $remote = git -C "$bucket_path" config --get remote.origin.url
+        $remote = Invoke-Git -Path $bucket_path -ArgumentList @('config', '--get', 'remote.origin.url')
         # Support ssh and http syntax
         # git@PROVIDER:USER/REPO.git
         # https://PROVIDER/USER/REPO.git
@@ -197,8 +205,8 @@ function new_issue_msg($app, $bucket, $title, $body) {
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUQ2S6eUgHURImkfTV5agNBOY1
-# mxagggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUK0SHMfEBKFKaYfJmDu10WMlv
+# f3ugggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -217,11 +225,11 @@ function new_issue_msg($app, $bucket, $title, $body) {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUcGGf1KxXzg8/axfYnJk86i24I24wDQYJKoZIhvcNAQEBBQAEggEA
-# SL01L8gwsQCiU/Et5BEjvR2dDWhl10XT5TPR6wDui4p3B/31qRyHxAJMmbXW3af/
-# kbPWKjwQ4gfc6enIe2CDHiL9YPKp1fLT7yXFJ8LybWu+dNWkhjiWFshlfdhUDEzO
-# OQulgrRA84eR28SUzE+cCfJO8YUDLcU648cix/aBQwaBQ7LPU37dhkYm+C4qr1TF
-# TvOBmaqRE2bvGNiVL8Ou5QmQMWE8C2li6RuqZi+qY4DgaYm5IQyKLeYODTcSyevO
-# xq/5nN8wMkgSA62GjyqLL/NsCyKlKSIDzDPok8tufUgnwY3llN+lE73UJRnIZSEW
-# zT0ol4z0WtZfwLcF5SC57A==
+# 9w0BCQQxFgQU8bR9+s9Vk3H12Or+aXyDP7j50YwwDQYJKoZIhvcNAQEBBQAEggEA
+# im7Irf2M6T34jmsJRUMRmHgl1IVLy76n0dmJ5vQ7j3kr2ODQ+cck7Ihur5c3XqWG
+# NCS/cyJOAXVGbP+N2wYbWbP1s+37YP7FoHEGiqoldume1muXOvMOj+GR9Nrk8f0R
+# jThkdGQUf1m4+deSVGuqpgtrAOVRK8C6xbZfrNlpDs9ywmeTI471C5mHzkXXf0Hr
+# kW5GQcl6Tws7br+tsnBs3x9scb7chG+CGbwvZ6EexrRUR8GJdd4DHkfkf5oU6xhu
+# dK1ekuznCDQAoJE7eFj8fM/jJyTDWMUlf1NHI0MdFMwsRWWh+xj5+TKJ6Bz3tTH+
+# 0pIBRU7lzV/BVXo+xmZ/Mg==
 # SIG # End signature block

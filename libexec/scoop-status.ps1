@@ -8,7 +8,7 @@
 . "$PSScriptRoot\..\lib\versions.ps1" # 'Select-CurrentVersion'
 
 # check if scoop needs updating
-$currentdir = fullpath $(versiondir 'scoop' 'current')
+$currentdir = versiondir 'scoop' 'current'
 $needs_update = $false
 $bucket_needs_update = $false
 $script:network_failure = $false
@@ -21,10 +21,10 @@ if (!(Get-FormatData ScoopStatus)) {
 
 function Test-UpdateStatus($repopath) {
     if (Test-Path "$repopath\.git") {
-        git_cmd -C "`"$repopath`"" fetch -q origin
+        Invoke-Git -Path $repopath -ArgumentList @('fetch', '-q', 'origin')
         $script:network_failure = 128 -eq $LASTEXITCODE
-        $branch  = git -C $repopath branch --show-current
-        $commits = git -C $repopath log "HEAD..origin/$branch" --oneline
+        $branch  = Invoke-Git -Path $repopath -ArgumentList @('branch', '--show-current')
+        $commits = Invoke-Git -Path $repopath -ArgumentList @('log', "HEAD..origin/$branch", '--oneline')
         if ($commits) { return $true }
         else { return $false }
     } else {
@@ -85,8 +85,8 @@ exit 0
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUsl+O00qtmNp0iYvu9ffEiAv0
-# r82gggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUYBoJztD7X0LbqlHxDHzkUmNq
+# fTigggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -105,11 +105,11 @@ exit 0
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUc8jwbG/SEu3QfeWk6SjO/w9tRzIwDQYJKoZIhvcNAQEBBQAEggEA
-# EhgWsXG+vxiwNMgrbhBZOSOkXJuxuUKXqY6KMCvuNH3HTo43Lp9Kz7wUgJ1KBJB8
-# 7YrYoW+0+NAWfCUoUCLJPxZqQHnMEisZIwy3o2p5b35ckONfMEIrkyGZckMB5byo
-# no8tNdDPtG636vQ4cH+vzH9m0TK/EXfYXYjKB0K686WppRIgDcDZsk5Cx33kvdvu
-# l7e5OK/v6UBFcls07o8AVCVWaEe1AjG9j93wcYgbkpB6sGurnZ/EhIbvwDJTzZdZ
-# r+9DrR+Qw7dRu6ERVTTsyadKIYKy1A3a9B6Jd7mIQJnRNKCn2xMPSZKYpNlW2wuf
-# Mv/d+iwouT3D5kbHnNkMvQ==
+# 9w0BCQQxFgQU5BciRutYoa31DXalthZZTnQ2Q4kwDQYJKoZIhvcNAQEBBQAEggEA
+# hfhz9nXd03HMK2iPIRHIKhyncpx+uXXb4JJE8cEynODQLdTmHDGUZkJYFyprcMJj
+# eyGPCh4QUyAzprjZaM+pjHy9XVXENJ/6C7sGWTVAD/PwqZP2yfaNGxxSWqPBx/jt
+# XN/mqCjfCDUD5GORJJiF5XBsGD62lu4+01V0DfNuAAHVrBWo3yZGCxQFlLiaRb09
+# o6O/oxBuygdCAchlxO/WVyHwwT3jYv7L5ibmPkTnAdEUUeNJsvWetJmZfXnXqbxn
+# B5lx59buNZJ+WBD4JiIOaaHrLKLKK4C2cAhhLJRdxdJK3fmc9DHnPsnYdmoPMafi
+# KOsAWWsE3b3PTiDHLd/s9A==
 # SIG # End signature block

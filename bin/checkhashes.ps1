@@ -121,7 +121,7 @@ foreach ($current in $MANIFESTS) {
 
         Invoke-CachedDownload $current.app $version $_ $null $null -use_cache:$UseCache
 
-        $to_check = fullpath (cache_path $current.app $version $_)
+        $to_check = cache_path $current.app $version $_
         $actual_hash = (Get-FileHash -Path $to_check -Algorithm $algorithm).Hash.ToLower()
 
         # Append type of algorithm to both expected and actual if it's not sha256
@@ -146,7 +146,7 @@ foreach ($current in $MANIFESTS) {
         Write-Host "$($current.app): " -NoNewline
         Write-Host 'Mismatch found ' -ForegroundColor Red
         $mismatched | ForEach-Object {
-            $file = fullpath (cache_path $current.app $version $current.urls[$_])
+            $file = cache_path $current.app $version $current.urls[$_]
             Write-Host "`tURL:`t`t$($current.urls[$_])"
             if (Test-Path $file) {
                 Write-Host "`tFirst bytes:`t$((get_magic_bytes_pretty $file ' ').ToUpper())"
@@ -192,8 +192,8 @@ foreach ($current in $MANIFESTS) {
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUj/SqKSzEgfXbfmfHxfbCHe6a
-# zeGgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUe9ajWXFe5zWNL6rWvDUt0u6c
+# O9GgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -212,11 +212,11 @@ foreach ($current in $MANIFESTS) {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUbme4hfyZxSE94mWxQex7neK4pVswDQYJKoZIhvcNAQEBBQAEggEA
-# LHmrXVtqvh0l8Ov/tNLBQsJUga7kv4aYas8IIbd58UXGgwHbLvjGh7lnB0HB8Pcy
-# fL7xngTMFLIbmVMaGvPAetxs+E+EiPOU37vldbHlhse0ZQb8GKKYg9zMMda5G8Yz
-# gxpxkl4rqKpejMctRuJwSpcIhu5OpCn8aRO599wvUssoHugiwVQ+2J0pop1dhL1O
-# enw7CogNBwR6Xr3+K7jjSpZNbJeZdRmajOnBzTjvhdQltc/GF3O0DYkRhX0kzFB8
-# xFn4o+onl4OzYuz8NcN6rtOKYeyLLs4iW2ViMZYT9p0agGngm6mEaVeKF9Ia/rJo
-# mh9aal15gftv5pnEgItL3g==
+# 9w0BCQQxFgQUmt2fVGnMB6pk2/hPvB8Qe6aEXdIwDQYJKoZIhvcNAQEBBQAEggEA
+# qTVebCfH1jhIXrNFK/pTk3l0jDb32+Ifsh1vZRNakQ5h+XRJ026sxrJblZuFresH
+# 8ABlHwQRxrMdP8aUWUbNcQuRoMXJq02UeLG+KgoDDcPXL5bGQutZ3rjpkqdxFo91
+# 6Zth7AUO/I7nA48bdz7Q4U1BGaAL/cAo3ZV8VdQVULxSIRruXjyIZ/o4oTza0WIx
+# d6+B1qtxSWPD/YXDWoQjfdWW2HllRAR2fftwqb6lWPdpn36RQ0XguYBYsQTUSOh/
+# fujVD7vDN95Yt5YhFAMLp6lclKxxx2m+mUYYBQW+JriuRdSHVJjJVixuOtYINEnc
+# xCI/VdtpbcWuK97bHCF30g==
 # SIG # End signature block

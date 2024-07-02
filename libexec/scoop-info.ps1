@@ -1,7 +1,7 @@
-# Usage: scoop info <app> [--verbose]
+# Usage: scoop info <app> [options]
 # Summary: Display information about an app
-# Options:
-#   -v, --verbose       Show full paths and URLs
+# Help: Options:
+#   -v, --verbose   Show full paths and URLs
 
 . "$PSScriptRoot\..\lib\getopt.ps1"
 . "$PSScriptRoot\..\lib\manifest.ps1" # 'Get-Manifest'
@@ -84,7 +84,7 @@ if ($manifest.depends) {
 
 if (Test-Path $manifest_file) {
     if (Get-Command git -ErrorAction Ignore) {
-        $gitinfo = (git -C (Split-Path $manifest_file) log -1 -s --format='%aD#%an' $manifest_file 2> $null) -Split '#'
+        $gitinfo = (Invoke-Git -Path (Split-Path $manifest_file) -ArgumentList @('log', '-1', '-s', '--format=%aD#%an', $manifest_file) 2> $null) -Split '#'
     }
     if ($gitinfo) {
         $item.'Updated at' = $gitinfo[0] | Get-Date
@@ -112,7 +112,7 @@ if ($status.installed) {
 
         # Collect file list from each location
         $appFiles = Get-ChildItem $appsdir -Filter $app
-        $currentFiles = Get-ChildItem $appFiles -Filter (Select-CurrentVersion $app $global)
+        $currentFiles = Get-ChildItem $appFiles.FullName -Filter (Select-CurrentVersion $app $global)
         $persistFiles = Get-ChildItem $persist_dir -ErrorAction Ignore # Will fail if app does not persist data
         $cacheFiles = Get-ChildItem $cachedir -Filter "$app#*"
 
@@ -120,7 +120,7 @@ if ($status.installed) {
         $fileTotals = @()
         foreach ($fileType in ($appFiles, $currentFiles, $persistFiles, $cacheFiles)) {
             if ($null -ne $fileType) {
-                $fileSum = (Get-ChildItem $fileType -Recurse | Measure-Object -Property Length -Sum).Sum
+                $fileSum = (Get-ChildItem $fileType.FullName -Recurse -File | Measure-Object -Property Length -Sum).Sum
                 $fileTotals += coalesce $fileSum 0
             } else {
                 $fileTotals += 0
@@ -160,7 +160,7 @@ if ($status.installed) {
         $totalPackage = 0
         foreach ($url in @(url $manifest (Get-DefaultArchitecture))) {
             try {
-                if (Test-Path (fullpath (cache_path $app $manifest.version $url))) {
+                if (Test-Path (cache_path $app $manifest.version $url)) {
                     $cached = " (latest version is cached)"
                 } else {
                     $cached = $null
@@ -247,8 +247,8 @@ exit 0
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUj+IoQu0u8XtVCKuAawfhWbGT
-# exigggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU6SMkawAmnZAAO4todVvKzJY4
+# 2BagggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -267,11 +267,11 @@ exit 0
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQU/htg424PZ4PCU3OVXpX1zQIk0nAwDQYJKoZIhvcNAQEBBQAEggEA
-# Xmf9rFVpCmATv8P0Mx8Hi4Kwe54IRdexJ++lcHKXxvvh3mRVzZJukbWAoGu827/U
-# J3UUCRnShL5YYOIifoul/zYNCFbelhtPHXBZSu0cdWidxc/X7hbfGW7lc2fJFFGM
-# OuuCt17/1jQqxF0X12HHbup7RvC7N/IO8e0zy/wP+tI3gEJQEWo6fi/hVIUD0wTF
-# jIk/kjK4dYeeCoO9xhtbtFle/544aE4gVEoSUHM1zvZStEqsAaFutULAH2PxBTwi
-# XK3lDCCk8hYzvmDzSsgGzGkvhNoka8u7iMlmrd7oBsHjvIaVL6cO7R2Jjjd1X5Zu
-# lvfiAoY099U0xTGL3m9M7g==
+# 9w0BCQQxFgQUc6hRnlXn06Vg56HyEh6K9Xyvh5gwDQYJKoZIhvcNAQEBBQAEggEA
+# bZilTv5aIEoGV4rzurzftscWjMMtG1q+2yu5fes00QPWrD60ua8ELcW2Cksm+UMG
+# TQObKyLq8q0qmS8XclvNwUHPN5HQvuVX3tbeABtDEL+WGdXK7Pe0h9PHnZdmponm
+# nLhruwS3MElVMTRaLW07wE6AVs5v4LrpZYdM3Y42gMVTPb/i5FaNQM8yIhI89pRe
+# hRwyOJDNBHm7Ppp8WEboX0TkfetmvmdoTWdsJ9CF7iM6RV3dcbr+umRcd4FSocSp
+# e9JX5BCKIwt0x9d3p9h+QLC6OaqkO/aKCiUmo1zCd3b4hSVEnPTMmpAcJ/k7PkSn
+# 5Ydx8ydFU7GrtFsLauRZjQ==
 # SIG # End signature block

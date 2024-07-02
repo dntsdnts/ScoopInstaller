@@ -47,15 +47,23 @@ $apps | ForEach-Object {
         return
     }
 
-    if (get_config NO_JUNCTION){
+    if (get_config NO_JUNCTION) {
         $version = Select-CurrentVersion -App $app -Global:$global
     } else {
         $version = 'current'
     }
     $dir = versiondir $app $version $global
     $json = install_info $app $version $global
+    if (!$json) {
+        error "Failed to hold '$app'."
+        continue
+    }
     $install = @{}
     $json | Get-Member -MemberType Properties | ForEach-Object { $install.Add($_.Name, $json.($_.Name)) }
+    if ($install.hold) {
+        info "'$app' is already held."
+        continue
+    }
     $install.hold = $true
     save_install_info $install $dir
     success "$app is now held and can not be updated anymore."
@@ -66,8 +74,8 @@ exit $exitcode
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUdy8dTW9AQ2Nob3kEZPlPD1sA
-# 93qgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQURn/Z2Eqyknp0P2onvL7H01e3
+# VZagggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -86,11 +94,11 @@ exit $exitcode
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUBRmyxlmSvBJfTXkato4sYa6QPN4wDQYJKoZIhvcNAQEBBQAEggEA
-# ekSTQN8lUlfTR2z5NFpxWTt0lNUUbTfZR8zBIV5Nn/wwGOIjIfCSQiXocIZvDwru
-# Ar1NhqrHM8fJJiGwf419+pAdo2Q1zCkax1MXuy+HncvB8DOxMjyvWw4OTFhabTWm
-# u6pPoL8qgUNCUv+Xps6HXJE/DacswNHLuxB+Jg1igg5o+WrNYNcNczAjBYfwxIE8
-# xpmnVOzOs1fMN+KF88U0huOZlK3hkbAKFGINCGwGLV6ddwi0021IHBAqRi0Xz4RT
-# KRximYVKyePzJ8YHMQ7zAgvcjluTmRrouv9zzS8ZR9zqOn3pIzw7xLmh1Rd4g3CL
-# v1+99lIN2RfuGF+NV7hKUw==
+# 9w0BCQQxFgQU101UrZwrx8OM0ud/uLzvpTSBN+0wDQYJKoZIhvcNAQEBBQAEggEA
+# R+LOQ2TAIXadRKDRi3TgNUA0TL17F3+U5WubyAOt01/df2sNOXj/2xtIBD9gUorN
+# 9vOv0VzgS39KiDoUgzov+B9A0DGzj96uAWJNBOXj2EXRVR/1prb8gPRXi7kTKeh2
+# g4wh0u2zxrOUG++dXHi6wFVoRyzuNGbdWTS2XVhPbFxfh/4zAcakXaRvsykWUsDJ
+# FJuPEYa52eD+Pdl09ZYhAoIA13uZOO6qesvwCn8YWR9zNVVg10YDdAQ6l470CWTI
+# iLIWhURBVoHuvvcdueQOn6SCce5Bvrxo6WV0QkqDLy4x9zQg3a+isQWaZh+bGOLU
+# Beusm9kWRxcZExVuBb65ww==
 # SIG # End signature block

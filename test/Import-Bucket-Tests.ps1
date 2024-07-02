@@ -16,11 +16,9 @@ Describe 'Manifest validates against the schema' {
         }
         if ($env:CI -eq $true) {
             Set-BuildEnvironment -Force
-            $changedManifests = @(Get-GitChangedFile -Path $bucketDir -Include '*.json' -Commit $env:BHCommitHash)
-        }
-        $manifestFiles = (Get-ChildItem $bucketDir -Filter '*.json' -Recurse).FullName
-        if ($changedManifests) {
-            $manifestFiles = $manifestFiles | Where-Object { $_ -in $changedManifests }
+            $manifestFiles = @(Get-GitChangedFile -Path $bucketDir -Include '*.json' -Commit $env:BHCommitHash)
+        } else {
+            $manifestFiles = (Get-ChildItem $bucketDir -Filter '*.json' -Recurse).FullName
         }
     }
     BeforeAll {
@@ -56,8 +54,8 @@ Describe 'Manifest validates against the schema' {
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUdmVRTBLKM8sJrghnLcTVBW2w
-# ce+gggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUYX7U3Wz/qyzoeKeDa4ZqZO+u
+# smGgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -76,11 +74,11 @@ Describe 'Manifest validates against the schema' {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUVRzqjgSx7gBdL0941i65Vnb5lcUwDQYJKoZIhvcNAQEBBQAEggEA
-# VaPySQ7yHSBMbYgKS7gqdHysP9e6ItEU7OwjCimL/dUyOTb5/A4CUJFAPOM/ygR7
-# qXmORcSInuQMFITx+8RVYqfq7y+YKSS56pFA6w08lhVL/BKpz5y7Cw6T2jeKIAR+
-# YSE+QVeYf2AIE2PstJ8eyVRhvj6AeJOHIYJENt8RLu1MWq2w8rEtewRwOnt6Af9v
-# OHekUG//eQOEMDc3cpZLcHZX7b/NbQF19Zfr7a1W0lMB647sKXJLN1hm0Rw9GMnT
-# QdTraYrV9PQnU7Y0RLThuNTbttSEhtJ9GEhtK5a+Z3ZhfznhQidPLaSkxQhKOuuI
-# HBVBFCGiWzTYyHO9mju6nw==
+# 9w0BCQQxFgQUAY5Y6zCzB++QhYRpHePjLASpxMgwDQYJKoZIhvcNAQEBBQAEggEA
+# IXUiVkiXkaMnTcKM9zu0ZnM+bOAMvsWR/geJtbNN5Fv54ktG7/LHuXfBWfkrKJCa
+# a2zaBQv8XnrTNM80SfcyrlmD55FU5x23v5M5fyU9AqBh9b4gyvbkN3xpvHqIC/LC
+# wprRFudEvx/gLXpERaQ7gzH6h40Bafaf09CQ41fCAMiCCxvtMWhTyUzDdPOnaV4b
+# /ZYJSX1LuEG5theUeF+ZDN/xpt582/vg40lHMGxl3SYH7OfZ827gdnfcBkAMehcY
+# 571n/yUpy4BxaTi5o0Lj2UTTmLZDgMeU6n9T764VGfliwqkixyVyPSRVTfdjMwLG
+# 8ndR2/xphFSPv2DjGhx0UQ==
 # SIG # End signature block

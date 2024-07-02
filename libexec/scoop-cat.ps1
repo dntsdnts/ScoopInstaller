@@ -14,14 +14,14 @@ if (!$app) { error '<app> missing'; my_usage; exit 1 }
 $null, $manifest, $bucket, $url = Get-Manifest $app
 
 if ($manifest) {
-        $style = get_config CAT_STYLE
-        if ($style) {
-                $manifest | ConvertToPrettyJson | bat --no-paging --style $style --language json
-        } else {
-                $manifest | ConvertToPrettyJson
-        }
+    $style = get_config CAT_STYLE
+    if ($style) {
+        $manifest | ConvertToPrettyJson | bat --no-paging --style $style --language json
+    } else {
+        $manifest | ConvertToPrettyJson
+    }
 } else {
-        abort "Couldn't find manifest for '$app'$(if($url) { " at the URL $url" })."
+    abort "Couldn't find manifest for '$app'$(if($bucket) { " from '$bucket' bucket" } elseif($url) { " at '$url'" })."
 }
 
 exit $exitCode
@@ -29,8 +29,8 @@ exit $exitCode
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU4N+lbw9goX3Nnaa5sbguKmEx
-# efugggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUBsRzSdyULkwDx1uAgD0jGU+t
+# h6qgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -49,11 +49,11 @@ exit $exitCode
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUnUMsmKY0cnFSzp+cnLRIwW7tM/MwDQYJKoZIhvcNAQEBBQAEggEA
-# coaajkfrtwn510Dy5eOnLDbVfYTwdG76lICQuyipULL7hP6VZEphiz+Rl+R2aOvS
-# HqWDNIOcj83WSd1ArVgHv90/f7daZdWhE5FlG4g4tqVK5090/uJIeCtM14z+JwVS
-# 6rt1q3SaqiMy3YTMYcO4s3bf6TGIIMb/q2V+H0x3aczHy9wDNcZ42NNtceDKet5L
-# azR01T6XXExsS1ucpPp381krFdxXA/HqWhIFakSMbEWsAMDP3iojbQCqB2egdsVs
-# Q+w5ryClxputG9FoJD3V0Ek9B+3L03Ge8wu2Zzg77cO9JIy6j+M+5YJjlEUEcyk3
-# 9qabOOLH9WYlUzThZ4xNog==
+# 9w0BCQQxFgQU6zzyPuJ25rk8aXtdpyrLXq2FVlgwDQYJKoZIhvcNAQEBBQAEggEA
+# T2mfp7hhCEyiesrmUHRbZQ5siv718DwYoqvB8/eLn4XHMU2G6mZLYUDWOJAKJwbk
+# zXToEdD0p+EtJI5jlij+rY9ciVwQ/ElXFPtffTZbhwe8LWklxNs8pje/wAPwd/tG
+# sD1c2gAnG4cTZuOn6zC10ovZ+7hEstyqQBHDb5bK48v1fGmd51vAg0rfbahrt3nA
+# v8NjUFkRVrUKWk3VqqFkmX9LGQ8OfQi5f+s6CJswc6RBjwpMv0T3J2CpMmwX0ZoT
+# 2Tg9plC+ZnLHIO5RcrMuEEuC43EH6ymMCkIq+G+KuTmZzVvRsf83tiaS3i4aatcJ
+# m+JnEOijhVOYl6D+8SMPAw==
 # SIG # End signature block

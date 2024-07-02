@@ -17,6 +17,12 @@ Describe 'getopt' -Tag 'Scoop' {
         $err | Should -Be 'Option --arb requires an argument.'
     }
 
+    It 'handle space in quote' {
+        $opt, $rem, $err = getopt '-x', 'space arg' 'x:' ''
+        $err | Should -BeNullOrEmpty
+        $opt.x | Should -Be 'space arg'
+    }
+
     It 'handle unrecognized short option' {
         $null, $null, $err = getopt '-az' 'a' ''
         $err | Should -Be 'Option -z not recognized.'
@@ -89,8 +95,8 @@ Describe 'getopt' -Tag 'Scoop' {
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU0CUJgdbhb7bXH7gZG6PSbrf8
-# lRWgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUjsCiXN1UlNR+KDPb+53pFxGc
+# 9FGgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -109,11 +115,11 @@ Describe 'getopt' -Tag 'Scoop' {
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQULKe+WcbVdlcFh/3hWyLuvf/IwYwwDQYJKoZIhvcNAQEBBQAEggEA
-# UiNS9a25QQES9KGdiwPR7qQoiHAzwkHwK5z0j/huHFkxN8CPO1Gplt12Y2CJSL7N
-# TH1I9sfS5j8h2oLVXXAgE63W/RndTAZBIEyoNT1OVFJLuAe0LJ8iptlj+XEAh98x
-# 8dk09bJrzGqSel0B2bH8S8xtUrWVj2YNA3MYVj2txHGTCQ/s5DcsdYP086e75aeG
-# ULEbVRpbUxE8UDkqh8G5dz/nEy8hwbuaxHeMl3BHqP+9LE2Z6FZbsOVKd5LOBwk4
-# Am/gI6ua15LKnMm5uY1QjMueASpvPJNOHcTPirWx01GkTXWhCUEgZs9dxcVFLBR0
-# SWHp37lEe2k4ty6dFALNvA==
+# 9w0BCQQxFgQU9sB2wwU5a+pONytVKECWhcgDQLcwDQYJKoZIhvcNAQEBBQAEggEA
+# rakwE/fvLAuU+w9HC8dOUiz26YCntpuMld5OiUzZfmmG1p+vNuF1Z5bKON3LN/4e
+# HTOfGpYsDf08ccPsqKUFV0rcObhX1rNoPZFIJRUl926rmy37VbGicpiuMixbMZU2
+# n+8l9OATmztAhNGWgtbksYSnEhhirjAzmc2oEhLdMdNqb8fCAwSo3W0WolJD6iEQ
+# CwjD6VvP/ABhzW1l0TJYn3zd+c5ZYJO0CEWuYbAsoOnqx2b2wT5EV4sxyx1MIVuj
+# wc/QeTP6PDkdLzv9EBFHMb5gdIhQMAjvITVEwUrKJGNX2IYmUfg9Ffya3zQu6ASz
+# I93Gn7+24A4Kn2eEgiNxEw==
 # SIG # End signature block

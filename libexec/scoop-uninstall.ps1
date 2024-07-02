@@ -8,6 +8,7 @@
 
 . "$PSScriptRoot\..\lib\getopt.ps1"
 . "$PSScriptRoot\..\lib\manifest.ps1" # 'Get-Manifest' 'Select-CurrentVersion' (indirectly)
+. "$PSScriptRoot\..\lib\system.ps1"
 . "$PSScriptRoot\..\lib\install.ps1"
 . "$PSScriptRoot\..\lib\shortcuts.ps1"
 . "$PSScriptRoot\..\lib\psmodules.ps1"
@@ -151,8 +152,8 @@ exit 0
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUIrTOd0BVf/gtX25Eiru0wKV7
-# R6igggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU6tkIM4lPUtAhbsG0Q7l8DJW/
+# ZRmgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -171,11 +172,11 @@ exit 0
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUB8p/uoj4T/tDpbXKRVtKwStHToMwDQYJKoZIhvcNAQEBBQAEggEA
-# QgX7XBIsKJlOISfUMebeAQ0UI++XPo5soBmW6mFi6AF87AGIFAys5JSYwk6Ha20C
-# 3gjCFeLlrsk6VfECiUVnVf+Zh0CSruq1CVA582LNIZygF5kRtqT165YqP+8A5GMg
-# oFKaSXYkT/i73Aidp4hfHmVQZRi3XaDMWVh/UscOCaRliiEU3/TD3ibFEqtaHpXb
-# UwW2o6SXU2VbJ5TdkojUML1ogP5mZsvwS+85OmHPXqfmIZ3Kbb/2la6RAi4K8tdz
-# LIZMgeE/dwuqojwTJ7QvbmW1KyDTcmlOMQBgN8yS49cmqqdjHGHknecFjDfN4Zbk
-# /R7/NZohyapTzSDXirtAGg==
+# 9w0BCQQxFgQUaPtfzsRLHSpjrkZ0WJD54JuSZF4wDQYJKoZIhvcNAQEBBQAEggEA
+# PLrMdwcQRT6AYteuSjk4dGJkh/WUaH1S4D6H1eh1sQegA0AaMlxwd5vkLXR3uFa2
+# BpSrdLJO/8hGe6fp+WlwF62vzitHRAUyT+Ei2rvubjhTAlnEXTcz4NLH5mn+oJnV
+# FrQDLZF8UCYIlBxr4K4yX8PZpiZh2al+G+CouO1Ohj2yk/AzDjbAmASSB1WP7Mqx
+# kYDvrt6uQ+j6KyldmszhLW2XgdFZ9dXAo8HcaU+CJtFKmsRoJ6My4cJ0GGx98Sm8
+# xUvtr9RkXvrG07au3ZslC09UPvdOvANWU4F34asNVQrSlLE8pP5o4O3lj5ysqnna
+# gcN2wNBunK7qkUIKJI2j9Q==
 # SIG # End signature block

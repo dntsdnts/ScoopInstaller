@@ -12,7 +12,7 @@
 #
 # To list all shims or matching shims, use the 'list' subcommand:
 #
-#     scoop shim list [<shim_name>/<pattern>...]
+#     scoop shim list [<regex_pattern>...]
 #
 # To show a shim's information, use the 'info' subcommand:
 #
@@ -35,6 +35,7 @@ param($SubCommand)
 
 . "$PSScriptRoot\..\lib\getopt.ps1"
 . "$PSScriptRoot\..\lib\install.ps1" # for rm_shim
+. "$PSScriptRoot\..\lib\system.ps1" # 'Add-Path' (indirectly)
 
 if ($SubCommand -notin @('add', 'rm', 'list', 'info', 'alter')) {
     if (!$SubCommand) {
@@ -82,7 +83,7 @@ function Get-ShimInfo($ShimPath) {
 function Get-ShimPath($ShimName, $Global) {
     '.shim', '.ps1' | ForEach-Object {
         $shimPath = Join-Path (shimdir $Global) "$ShimName$_"
-        if (Test-Path $shimPath) {
+        if (Test-Path -LiteralPath $shimPath) {
             return $shimPath
         }
     }
@@ -144,7 +145,7 @@ switch ($SubCommand) {
         $other | ForEach-Object {
             try {
                 $pattern = $_
-                [Regex]::New($pattern)
+                [void][Regex]::New($pattern)
             } catch {
                 Write-Host "ERROR: Invalid pattern: " -ForegroundColor Red -NoNewline
                 Write-Host $pattern -ForegroundColor Magenta
@@ -241,8 +242,8 @@ exit 0
 # SIG # Begin signature block
 # MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU9SLCgd93FXgHY8sEXw5Otwpy
-# 5dSgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUfrNIciFe8H/insotI0BIL9cY
+# jQigggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
 # AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
 # NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
 # AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
@@ -261,11 +262,11 @@ exit 0
 # AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
 # GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
 # KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
-# 9w0BCQQxFgQUhuFC389pKrMO1VuPghv2wV7IWaEwDQYJKoZIhvcNAQEBBQAEggEA
-# FuccsrD10OkhEfp45vL6qxKIqHzH4I7eMtaMu3lpOOMLnUi61xMCB4oLK8y3bB8C
-# IYfIb9I+kQF9F7xUF4bnaqHJh3cviHt/2E5E1zqDGaHrFtC6JmRHz7RWXi/+Lrmc
-# Tr6HW7aXB+ar/mR37Fx5LvYn1iVizKniSKsIdjPtZf5UQda3FTKoRfJn6FAOYdUH
-# X0sPjUSvtGeZk/OfWWJfQjXvYDasQ71NY5Wx/YBUyYuXLyKsNl9Sl3xTVZ7ADe5p
-# ZKhdV3dq/hf43xSURtHVcV1A2zZW3ocMk324cMx+T881TtL8Qq8ZT+2a2qzEtz4m
-# w/RmGnIroo3/yrVqmE0mfA==
+# 9w0BCQQxFgQUNGR1TR+xlKPJp1TK/1+DZhNKfyEwDQYJKoZIhvcNAQEBBQAEggEA
+# gzWN2CvbjGimv3rErXSx9NB2+cxOt5P1DxEyYaCRUd6vJj/Arxs0rimOh8RWDEPa
+# EAvKPt1d0zdx+7bdZbLysAQyQZ+kAwWsaJI9pUgk8LlBZqP0SOuAlPe/cXll1Xq9
+# l9PXWNuxulgLqzJ4h0X3Dire/aL/kCRJnU1dg6cvuJ2paMnYgpzSCLgcGs7VVGEv
+# DXdLWUMYsTPWhXqSIrKrn1HcyRB7JXIlkvHTiEmq01rbEyIVdmrVVPQtproTBeMa
+# D2IwLG1X1GoZH9yjvOYwM2v/Wj8KXFs8XWlnq8RriZAXMct1Hp5RKyW9LA3zss5/
+# M7XchcZBgHzcmfbkKyY1cg==
 # SIG # End signature block
