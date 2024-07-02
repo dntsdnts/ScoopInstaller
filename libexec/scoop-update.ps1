@@ -194,8 +194,8 @@ function Sync-Bucket {
             }
         }
 
-	Get-AuthenticodeSignature (ls $bucketLoc -Recurse -Filter *ps1)|where Status -NE Valid|select -ExpandProperty path|foreach {Set-AuthenticodeSignature $_ (ls Cert:\CurrentUser\My\ -CodeSigningCert)|select path,StatusMessage}
-	
+        Get-AuthenticodeSignature (ls $bucketLoc -Recurse -Filter *ps1)|where Status -NE Valid|select -ExpandProperty path|foreach {Set-AuthenticodeSignature $_ (ls Cert:\CurrentUser\My\ -CodeSigningCert)|select path,StatusMessage}
+
     } else {
         $buckets | Where-Object { $_.valid } | ForEach-Object {
             $bucketLoc = $_.path
@@ -208,7 +208,7 @@ function Sync-Bucket {
             }
         }
 
-	Get-AuthenticodeSignature (ls $bucketLoc -Recurse -Filter *ps1)|where Status -NE Valid|select -ExpandProperty path|foreach {Set-AuthenticodeSignature $_ (ls Cert:\CurrentUser\My\ -CodeSigningCert)|select path,StatusMessage}
+        Get-AuthenticodeSignature (ls $bucketLoc -Recurse -Filter *ps1)|where Status -NE Valid|select -ExpandProperty path|foreach {Set-AuthenticodeSignature $_ (ls Cert:\CurrentUser\My\ -CodeSigningCert)|select path,StatusMessage}
 
     }
 
@@ -426,8 +426,8 @@ exit 0
 # SIG # Begin signature block
 # MIIFcQYJKoZIhvcNAQcCoIIFYjCCBV4CAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCD3p8AObo7vS5qe
-# 08AzJZdUKejJMJAE2HCXyXQyNQiaGKCCAvIwggLuMIIB1qADAgECAhBRXjN43tOe
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCBNFcIfPBF0xL4F
+# AwIqAS+mIJdClMWe909Z2qnt3NIFLKCCAvIwggLuMIIB1qADAgECAhBRXjN43tOe
 # vkj4l+euvSLrMA0GCSqGSIb3DQEBDQUAMA8xDTALBgNVBAMMBHFycXIwHhcNMjQw
 # NjI5MDczMTE4WhcNMjUwNjI5MDc1MTE4WjAPMQ0wCwYDVQQDDARxcnFyMIIBIjAN
 # BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzGyCuR6iKpn8DX3kWN4b7mG9FwOf
@@ -446,12 +446,12 @@ exit 0
 # Tnv+D9lQdt4kF86zMYIB1TCCAdECAQEwIzAPMQ0wCwYDVQQDDARxcnFyAhBRXjN4
 # 3tOevkj4l+euvSLrMA0GCWCGSAFlAwQCAQUAoIGEMBgGCisGAQQBgjcCAQwxCjAI
 # oAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGCNwIB
-# CzEOMAwGCisGAQQBgjcCARUwLwYJKoZIhvcNAQkEMSIEIMh4+yj3SePVpAzmryoi
-# 2DWJCLXFmWJmBb6RGUvsKyCaMA0GCSqGSIb3DQEBAQUABIIBAK4A/NHUZhzku/lT
-# 1eW7Vx3cGY/TESny7tS8gKzLDwktKep+XvyzozmO1L23Voy8Wm0mbcs0Y7NkXKcS
-# zMC7HZDlRpiuC6G2JQuzeOfXRyASh/VwTsM1Cui6uRi37FysLHgLhvlwqUBnkP7/
-# ZHK39+XFJNWijQLqevtcxBj5Qoq/vGs4XFAsmcUL7stUhtjsvSpX96D1i2AjtMFU
-# AcIV0CkUvJTfbrFogBl/8HD6F1XKKh4uEuwckUx1pXE2vcK6G8qena4SfXPkUmTx
-# /ohnoAJJeT1XP1ZGFE6iaUuKFWMJ30QGZIRKvge5lTEg1aMsZGLoHQcJLfSB03/H
-# FJ5+at8=
+# CzEOMAwGCisGAQQBgjcCARUwLwYJKoZIhvcNAQkEMSIEIPTZzo+j704qk3W9/FBX
+# Bn+SqgNKbtdDhiPnzGwvG0L4MA0GCSqGSIb3DQEBAQUABIIBAHLsDB2+VrMMsfe0
+# ZxJNkSbtNE+UuH8OKlxtjb66yCRCSbKhE4j/Gmzy+pCtI1709uz1dwDXFaKPkN36
+# 2P9VKMfoouDU/LrTFrW3HGKTNsHFNh30yBucEVaVdvGfaWB4c3FLERPd6Re4NHt8
+# krKkbYbyUEgbDZE+I7PRNoycKDAvt0LmiK0YqWXb+Quof/uhWhUtCokexgLxlYkp
+# cNlXtj7peGXTLCxIHG8B8D4HHWXyHAJFB3OLhXSjF4mTtrs8EBAPIrMeh8foC7OT
+# qNH8qyPtZG6o4g3qJBrmxgYZXzeZfTQ/X0YrgOYVBM9SMR6kaTklgzahmkof91WX
+# w+cY/aE=
 # SIG # End signature block
