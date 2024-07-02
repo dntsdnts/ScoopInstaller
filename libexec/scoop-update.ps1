@@ -146,7 +146,7 @@ function Sync-Scoop {
     }
 
     shim "$currentdir\bin\scoop.ps1" $false
-    Set-AuthenticodeSignature "$currentdir\bin\scoop.ps1" (ls Cert:\CurrentUser\My\ -CodeSigningCert)|select status
+    Set-AuthenticodeSignature "$currentdir\bin\scoop.ps1" (ls Cert:\CurrentUser\My\ -CodeSigningCert)|select path,StatusMessage
 }
 
 function Sync-Bucket {
@@ -194,7 +194,7 @@ function Sync-Bucket {
             }
         }
 
-	Get-AuthenticodeSignature (ls .\scoop\buckets\ -Recurse -Filter *ps1)|where Status -NE Valid|select -ExpandProperty path|foreach {Set-AuthenticodeSignature $_ (ls Cert:\CurrentUser\My\ -CodeSigningCert)}
+	Get-AuthenticodeSignature (ls $bucketLoc -Recurse -Filter *ps1)|where Status -NE Valid|select -ExpandProperty path|foreach {Set-AuthenticodeSignature $_ (ls Cert:\CurrentUser\My\ -CodeSigningCert)|select path,StatusMessage}
 	
     } else {
         $buckets | Where-Object { $_.valid } | ForEach-Object {
@@ -208,7 +208,7 @@ function Sync-Bucket {
             }
         }
 
-	Get-AuthenticodeSignature (ls .\scoop\buckets\ -Recurse -Filter *ps1)|where Status -NE Valid|select -ExpandProperty path|foreach {Set-AuthenticodeSignature $_ (ls Cert:\CurrentUser\My\ -CodeSigningCert)}
+	Get-AuthenticodeSignature (ls $bucketLoc -Recurse -Filter *ps1)|where Status -NE Valid|select -ExpandProperty path|foreach {Set-AuthenticodeSignature $_ (ls Cert:\CurrentUser\My\ -CodeSigningCert)|select path,StatusMessage}
 
     }
 
@@ -426,8 +426,8 @@ exit 0
 # SIG # Begin signature block
 # MIIFcQYJKoZIhvcNAQcCoIIFYjCCBV4CAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCBFliQgrI8k1y6n
-# 6RYJnwBj6iAk9TLsBZZxP1LLidydo6CCAvIwggLuMIIB1qADAgECAhBRXjN43tOe
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCD3p8AObo7vS5qe
+# 08AzJZdUKejJMJAE2HCXyXQyNQiaGKCCAvIwggLuMIIB1qADAgECAhBRXjN43tOe
 # vkj4l+euvSLrMA0GCSqGSIb3DQEBDQUAMA8xDTALBgNVBAMMBHFycXIwHhcNMjQw
 # NjI5MDczMTE4WhcNMjUwNjI5MDc1MTE4WjAPMQ0wCwYDVQQDDARxcnFyMIIBIjAN
 # BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzGyCuR6iKpn8DX3kWN4b7mG9FwOf
@@ -446,12 +446,12 @@ exit 0
 # Tnv+D9lQdt4kF86zMYIB1TCCAdECAQEwIzAPMQ0wCwYDVQQDDARxcnFyAhBRXjN4
 # 3tOevkj4l+euvSLrMA0GCWCGSAFlAwQCAQUAoIGEMBgGCisGAQQBgjcCAQwxCjAI
 # oAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGCNwIB
-# CzEOMAwGCisGAQQBgjcCARUwLwYJKoZIhvcNAQkEMSIEINbyC0hRRzXNou+fhxsQ
-# Ky4NNbyP06ZfO6nBvIf6r89uMA0GCSqGSIb3DQEBAQUABIIBAJV+V0svPZ8IMKpt
-# WFGNgGiFPGhBHulxMBAzvcQgaMhFF9WaSggeF4PMSWegSNbviZeXDkPJqupIuW64
-# TaaRbEH6YXwIYakH/7s1H2pPjly9ANfgO9mBohi6jS2Sg5oItx1V85xJPwWo8bER
-# C63U62jXYYBqWwS2dASD+UCF5f31BrqJndhuUnUP936fqSxkkXfN5MT6ZaOEFRuJ
-# qRzHCe2EHw8YRQQ74uzADbldD0zL7/irXdKPvoiPMyyxElzvtVAwWneWZ1uPaOWu
-# dW5H9/epcP5qrwJfOE5aLQzMR9NY4zHfYice9iEo3oewzi0Z63Ep+86KoAZHymPu
-# Q57ZIIA=
+# CzEOMAwGCisGAQQBgjcCARUwLwYJKoZIhvcNAQkEMSIEIMh4+yj3SePVpAzmryoi
+# 2DWJCLXFmWJmBb6RGUvsKyCaMA0GCSqGSIb3DQEBAQUABIIBAK4A/NHUZhzku/lT
+# 1eW7Vx3cGY/TESny7tS8gKzLDwktKep+XvyzozmO1L23Voy8Wm0mbcs0Y7NkXKcS
+# zMC7HZDlRpiuC6G2JQuzeOfXRyASh/VwTsM1Cui6uRi37FysLHgLhvlwqUBnkP7/
+# ZHK39+XFJNWijQLqevtcxBj5Qoq/vGs4XFAsmcUL7stUhtjsvSpX96D1i2AjtMFU
+# AcIV0CkUvJTfbrFogBl/8HD6F1XKKh4uEuwckUx1pXE2vcK6G8qena4SfXPkUmTx
+# /ohnoAJJeT1XP1ZGFE6iaUuKFWMJ30QGZIRKvge5lTEg1aMsZGLoHQcJLfSB03/H
+# FJ5+at8=
 # SIG # End signature block
