@@ -25,7 +25,7 @@ Describe 'Decompression function' -Tag 'Scoop', 'Windows', 'Decompress' {
         }
         It 'Test cases should exist and hash should match' {
             $testcases | Should -Exist
-            (Get-FileHash -Path $testcases -Algorithm SHA256).Hash.ToLower() | Should -Be '23a23a63e89ff95f5ef27f0cacf08055c2779cf41932266d8f509c2e200b8b63'
+            (Get-FileHash -Path $testcases -Algorithm SHA256).Hash.ToLower() | Should -Be 'afb86b0552187b8d630ce25d02835fb809af81c584f07e54cb049fb74ca134b6'
         }
         It 'Test cases should be extracted correctly' {
             { Microsoft.PowerShell.Archive\Expand-Archive -Path $testcases -DestinationPath $working_dir } | Should -Not -Throw
@@ -152,41 +152,6 @@ Describe 'Decompression function' -Tag 'Scoop', 'Windows', 'Decompress' {
         }
     }
 
-    Context 'zstd extraction' {
-
-        BeforeAll {
-            if ($env:CI) {
-                Mock Get-AppFilePath { $env:SCOOP_ZSTD_PATH } -ParameterFilter { $Helper -eq 'zstd' }
-                Mock Get-AppFilePath { '7z.exe' } -ParameterFilter { $Helper -eq '7zip' }
-            } elseif (!(installed zstd)) {
-                scoop install zstd
-            }
-
-            $test1 = "$working_dir\ZstdTest.zst"
-            $test2 = "$working_dir\ZstdTest.tar.zst"
-        }
-
-        It 'extract normal compressed file' {
-            $to = test_extract 'Expand-ZstdArchive' $test1
-            $to | Should -Exist
-            "$to\ZstdTest" | Should -Exist
-            (Get-ChildItem $to).Count | Should -Be 1
-        }
-
-        It 'extract nested compressed file' {
-            $to = test_extract 'Expand-ZstdArchive' $test2
-            $to | Should -Exist
-            "$to\ZstdTest" | Should -Exist
-            (Get-ChildItem $to).Count | Should -Be 1
-        }
-
-        It 'works with "-Removal" switch ($removal param)' {
-            $test1 | Should -Exist
-            test_extract 'Expand-ZstdArchive' $test1 $true
-            $test1 | Should -Not -Exist
-        }
-    }
-
     Context 'msi extraction' {
 
         BeforeAll {
@@ -290,34 +255,33 @@ Describe 'Decompression function' -Tag 'Scoop', 'Windows', 'Decompress' {
 }
 
 # SIG # Begin signature block
-# MIIFcQYJKoZIhvcNAQcCoIIFYjCCBV4CAQExDzANBglghkgBZQMEAgEFADB5Bgor
-# BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCBAW7MSVcSSejmS
-# axGhLLRhE0LtKCu1XSiHGJXK9n4nHqCCAvIwggLuMIIB1qADAgECAhBRXjN43tOe
-# vkj4l+euvSLrMA0GCSqGSIb3DQEBDQUAMA8xDTALBgNVBAMMBHFycXIwHhcNMjQw
-# NjI5MDczMTE4WhcNMjUwNjI5MDc1MTE4WjAPMQ0wCwYDVQQDDARxcnFyMIIBIjAN
-# BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzGyCuR6iKpn8DX3kWN4b7mG9FwOf
-# P+3w/qAPET+0ejsqwRfd3PbQBtCln8LP40sTe0Oy5tOFez63/tXshModzgfA+5cA
-# iGG1I1YMVRHjpVPd24tZLr+6kkOR6az+VFS3zRCWhH/kN5oMxxkEt7vacZC1QRrh
-# PQWcCVXYorPmZwPNHws5k7ZxtPHWT367HZrzrzHXW0VB+XX52a7EgRWFVzAaCziH
-# DHUTAvnDwbnLGt1kfX43AxvcOPXpzFPtpEXh+DRgwKGjJaHKzuWYzK8lHs6TXbZF
-# QbJI4SN4xgq4+i2ceZECPl4ROzG9HaO7s4Q4TmeXAcyziMxb55QHQDauwQIDAQAB
-# o0YwRDAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYIKwYBBQUHAwMwHQYDVR0O
-# BBYEFFxJWt2yBxX0gUBoRDAcm4HuLs9LMA0GCSqGSIb3DQEBDQUAA4IBAQBIqYh9
-# /0VLnlt0csz4RWJf6tpmdUrv39mlXfJXBQBgSjKrUNph1lyvEnXorTqCTyT5cjQ5
-# 5GXaN4jQYpE2FISWUte/b+JY0WPl5xS3Ewl5c6HVIwDZ/54hXKezQu18NVVRvbAL
-# 5blL+fn+NFMakRiP8Z/advmSN7qsF8H/HWSTRnkAAzfDe7folyzfgmej4Stk7XRX
-# QabaUPeiYTiJGhY0FFknsXLIwk3F0azE5LRxUD7qhoK2nFP9yPjVXqfkmxOt2WPo
-# 7FGDPJYS0iPB/oQO4/+3x0YHXgmE8BoicNRA9jQJ1s/gDQOX0qOWgbecdwNef1u/
-# Tnv+D9lQdt4kF86zMYIB1TCCAdECAQEwIzAPMQ0wCwYDVQQDDARxcnFyAhBRXjN4
-# 3tOevkj4l+euvSLrMA0GCWCGSAFlAwQCAQUAoIGEMBgGCisGAQQBgjcCAQwxCjAI
-# oAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGCNwIB
-# CzEOMAwGCisGAQQBgjcCARUwLwYJKoZIhvcNAQkEMSIEIGJSIFZWFVBRLFjpW3xd
-# 1QmtBLHwA3WqwVCkfx1rcvjmMA0GCSqGSIb3DQEBAQUABIIBAH7i9gI7ytopIG8u
-# CTMYeOc/7WrtgIwu2dC1sUIjKGaqss44zFr2O9AZoGFBotGNl9Mkwy04s0AFSNds
-# PcrZ7xS6UPE3+xKAwEL+LmmSDFBTppg/P73TGQK6CMFr/66FIesvA8pQqIa++lrd
-# xORpnTrd4vjUPSnmHG3+Qq0EfYwc9PDZTIeSpgddb4E0VHLGYNhgZXIfeL7a1il6
-# sPaXCRAq1LiHWOR4UZPJSdV2ruY0v0R5tkMt8NtZz/RvH3iFTBixASRNR30TNzwU
-# UT1sy6ig33Cbu2gvnHJagVnV5eGqITW5gFtBVC0WZ2KC5DbJjVTeDELdCxy8r87x
-# dJArJng=
+# MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
+# gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUPd9GAloRSo35+rEIL/y2W61m
+# IZCgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
+# NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
+# AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
+# pZ/Cz+NLE3tDsubThXs+t/7V7ITKHc4HwPuXAIhhtSNWDFUR46VT3duLWS6/upJD
+# kems/lRUt80QloR/5DeaDMcZBLe72nGQtUEa4T0FnAlV2KKz5mcDzR8LOZO2cbTx
+# 1k9+ux2a868x11tFQfl1+dmuxIEVhVcwGgs4hwx1EwL5w8G5yxrdZH1+NwMb3Dj1
+# 6cxT7aRF4fg0YMChoyWhys7lmMyvJR7Ok122RUGySOEjeMYKuPotnHmRAj5eETsx
+# vR2ju7OEOE5nlwHMs4jMW+eUB0A2rsECAwEAAaNGMEQwDgYDVR0PAQH/BAQDAgeA
+# MBMGA1UdJQQMMAoGCCsGAQUFBwMDMB0GA1UdDgQWBBRcSVrdsgcV9IFAaEQwHJuB
+# 7i7PSzANBgkqhkiG9w0BAQ0FAAOCAQEASKmIff9FS55bdHLM+EViX+raZnVK79/Z
+# pV3yVwUAYEoyq1DaYdZcrxJ16K06gk8k+XI0OeRl2jeI0GKRNhSEllLXv2/iWNFj
+# 5ecUtxMJeXOh1SMA2f+eIVyns0LtfDVVUb2wC+W5S/n5/jRTGpEYj/Gf2nb5kje6
+# rBfB/x1kk0Z5AAM3w3u36Jcs34Jno+ErZO10V0Gm2lD3omE4iRoWNBRZJ7FyyMJN
+# xdGsxOS0cVA+6oaCtpxT/cj41V6n5JsTrdlj6OxRgzyWEtIjwf6EDuP/t8dGB14J
+# hPAaInDUQPY0CdbP4A0Dl9KjloG3nHcDXn9bv057/g/ZUHbeJBfOszGCAcQwggHA
+# AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
+# GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
+# KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
+# 9w0BCQQxFgQUJgosVvEm91Db7b6YK/U8AYkUnhMwDQYJKoZIhvcNAQEBBQAEggEA
+# Q8G9J07r/p03p5o3HYHWjlZ4aZYEXkj004nms+IqZzyGkQMkCa6sOTPymUSpcWV5
+# uPi9AQVDhY2yPPfsM2/E8+F5qx0flL0vktXIsGPYw9ohcnZKkAdM6IvXJPfo6u4D
+# Tawz2wE2EnvnTae93wMSo1k8ZhRsZpv5jExrIM+4pRpXJU63OLztGxwoXWIoUo1z
+# 6hFg9+iyb1k1veIy9jsclQHxhiNMt8BcfbbAMeAaHlj8eeCc4G7XvmmxMfnBCPKO
+# Y+0q+FQOuepWVFCQbhOO7UWz/MgfNuhgwyz4K6t7fpaXrjWKZN2yUmOSjHZ7D1zS
+# GVV5MO/dZVm9Y81ISeY+Xg==
 # SIG # End signature block

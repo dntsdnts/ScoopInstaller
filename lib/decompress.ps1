@@ -1,3 +1,67 @@
+# Description: Functions for decompressing archives or installers
+
+function Invoke-Extraction {
+    param (
+        [string]
+        $Path,
+        [string[]]
+        $Name,
+        [psobject]
+        $Manifest,
+        [Alias('Arch', 'Architecture')]
+        [string]
+        $ProcessorArchitecture
+    )
+
+    $uri = @(url $Manifest $ProcessorArchitecture)
+    # 'extract_dir' and 'extract_to' are paired
+    $extractDir = @(extract_dir $Manifest $ProcessorArchitecture)
+    $extractTo = @(extract_to $Manifest $ProcessorArchitecture)
+    $extracted = 0
+
+    for ($i = 0; $i -lt $Name.Length; $i++) {
+        # work out extraction method, if applicable
+        $extractFn = $null
+        switch -regex ($Name[$i]) {
+            '\.zip$' {
+                if ((Test-HelperInstalled -Helper 7zip) -or ((get_config 7ZIPEXTRACT_USE_EXTERNAL) -and (Test-CommandAvailable 7z))) {
+                    $extractFn = 'Expand-7zipArchive'
+                } else {
+                    $extractFn = 'Expand-ZipArchive'
+                }
+                continue
+            }
+            '\.msi$' {
+                $extractFn = 'Expand-MsiArchive'
+                continue
+            }
+            '\.exe$' {
+                if ($Manifest.innosetup) {
+                    $extractFn = 'Expand-InnoArchive'
+                }
+                continue
+            }
+            { Test-7zipRequirement -Uri $_ } {
+                $extractFn = 'Expand-7zipArchive'
+                continue
+            }
+        }
+        if ($extractFn) {
+            $fnArgs = @{
+                Path            = Join-Path $Path $Name[$i]
+                DestinationPath = Join-Path $Path $extractTo[$extracted]
+                ExtractDir      = $extractDir[$extracted]
+            }
+            Write-Host 'Extracting ' -NoNewline
+            Write-Host $(url_remote_filename $uri[$i]) -ForegroundColor Cyan -NoNewline
+            Write-Host ' ... ' -NoNewline
+            & $extractFn @fnArgs -Removal
+            Write-Host 'done.' -ForegroundColor Green
+            $extracted++
+        }
+    }
+}
+
 function Expand-7zipArchive {
     [CmdletBinding()]
     param (
@@ -96,37 +160,9 @@ function Expand-ZstdArchive {
         [Switch]
         $Removal
     )
-    $ZstdPath = Get-HelperPath -Helper Zstd
-    $LogPath = Join-Path (Split-Path $Path) 'zstd.log'
-    $DestinationPath = $DestinationPath.TrimEnd('\')
-    ensure $DestinationPath | Out-Null
-    $ArgList = @('-d', $Path, '--output-dir-flat', $DestinationPath, '-f', '-v')
-
-    if ($Switches) {
-        $ArgList += (-split $Switches)
-    }
-    if ($Removal) {
-        # Remove original archive file
-        $ArgList += '--rm'
-    }
-    $Status = Invoke-ExternalCommand $ZstdPath $ArgList -LogPath $LogPath
-    if (!$Status) {
-        abort "Failed to extract files from $Path.`nLog file:`n  $(friendly_path $LogPath)`n$(new_issue_msg $app $bucket 'decompress error')"
-    }
-    $IsTar = (strip_ext $Path) -match '\.tar$'
-    if ($IsTar) {
-        # Check for tar
-        $TarFile = Join-Path $DestinationPath (strip_ext (fname $Path))
-        Expand-7zipArchive -Path $TarFile -DestinationPath $DestinationPath -ExtractDir $ExtractDir -Removal
-    }
-    if (!$IsTar -and $ExtractDir) {
-        movedir (Join-Path $DestinationPath $ExtractDir) $DestinationPath | Out-Null
-        # Remove temporary directory
-        Remove-Item "$DestinationPath\$($ExtractDir -replace '[\\/].*')" -Recurse -Force -ErrorAction Ignore
-    }
-    if (Test-Path $LogPath) {
-        Remove-Item $LogPath -Force
-    }
+    # TODO: Remove this function after 2024/12/31
+    Show-DeprecatedWarning $MyInvocation 'Expand-7zipArchive'
+    Expand-7zipArchive -Path $Path -DestinationPath $DestinationPath -ExtractDir $ExtractDir -Switches $Switches -Removal:$Removal
 }
 
 function Expand-MsiArchive {
@@ -315,34 +351,33 @@ function Expand-DarkArchive {
 }
 
 # SIG # Begin signature block
-# MIIFcQYJKoZIhvcNAQcCoIIFYjCCBV4CAQExDzANBglghkgBZQMEAgEFADB5Bgor
-# BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDqTEFnV3yaR8Mj
-# 5ne9X1IJY7kAd3OOHlWbTpSSU8cVWKCCAvIwggLuMIIB1qADAgECAhBRXjN43tOe
-# vkj4l+euvSLrMA0GCSqGSIb3DQEBDQUAMA8xDTALBgNVBAMMBHFycXIwHhcNMjQw
-# NjI5MDczMTE4WhcNMjUwNjI5MDc1MTE4WjAPMQ0wCwYDVQQDDARxcnFyMIIBIjAN
-# BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzGyCuR6iKpn8DX3kWN4b7mG9FwOf
-# P+3w/qAPET+0ejsqwRfd3PbQBtCln8LP40sTe0Oy5tOFez63/tXshModzgfA+5cA
-# iGG1I1YMVRHjpVPd24tZLr+6kkOR6az+VFS3zRCWhH/kN5oMxxkEt7vacZC1QRrh
-# PQWcCVXYorPmZwPNHws5k7ZxtPHWT367HZrzrzHXW0VB+XX52a7EgRWFVzAaCziH
-# DHUTAvnDwbnLGt1kfX43AxvcOPXpzFPtpEXh+DRgwKGjJaHKzuWYzK8lHs6TXbZF
-# QbJI4SN4xgq4+i2ceZECPl4ROzG9HaO7s4Q4TmeXAcyziMxb55QHQDauwQIDAQAB
-# o0YwRDAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYIKwYBBQUHAwMwHQYDVR0O
-# BBYEFFxJWt2yBxX0gUBoRDAcm4HuLs9LMA0GCSqGSIb3DQEBDQUAA4IBAQBIqYh9
-# /0VLnlt0csz4RWJf6tpmdUrv39mlXfJXBQBgSjKrUNph1lyvEnXorTqCTyT5cjQ5
-# 5GXaN4jQYpE2FISWUte/b+JY0WPl5xS3Ewl5c6HVIwDZ/54hXKezQu18NVVRvbAL
-# 5blL+fn+NFMakRiP8Z/advmSN7qsF8H/HWSTRnkAAzfDe7folyzfgmej4Stk7XRX
-# QabaUPeiYTiJGhY0FFknsXLIwk3F0azE5LRxUD7qhoK2nFP9yPjVXqfkmxOt2WPo
-# 7FGDPJYS0iPB/oQO4/+3x0YHXgmE8BoicNRA9jQJ1s/gDQOX0qOWgbecdwNef1u/
-# Tnv+D9lQdt4kF86zMYIB1TCCAdECAQEwIzAPMQ0wCwYDVQQDDARxcnFyAhBRXjN4
-# 3tOevkj4l+euvSLrMA0GCWCGSAFlAwQCAQUAoIGEMBgGCisGAQQBgjcCAQwxCjAI
-# oAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGCNwIB
-# CzEOMAwGCisGAQQBgjcCARUwLwYJKoZIhvcNAQkEMSIEIGOL38dHilI+bFGMJ1qN
-# r+lessoTR6xWu0GsCvni9UFOMA0GCSqGSIb3DQEBAQUABIIBACrB1R0Ym87LlanH
-# /+8GN/A/oEwflUmhhvU3BDq1BOYYik9jDw075KmVb5xP9ffW2BgK6Z6iokwTfPAZ
-# ZoyQ69+Y9vIgiCApVDvKSFbHwlzNC+qFIXJy+EVPA52xBF8mKo2NAYqYJXAkL31v
-# egXwK/7t7ZSUUPcRDo6R25FLeQZkXnLR/tefo/BMvwxuM5mdfdMxJlpDSGGcJ55J
-# WL4oYFFJCzvtFMc+adjCnco/dtme3YI7S/rBFd/u+s52oJZUfdo4vq/HfML9LkQ0
-# wRkc6HA+mLjY4hQpw2s8Lj3nt4YbXaPGiSXion7Z/BIBIJI4FFDBTjkcZrxwvpOI
-# lvH96gQ=
+# MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
+# gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUWY726KacZ+N9eM1dPLfEDaE+
+# 9kagggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
+# NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
+# AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
+# pZ/Cz+NLE3tDsubThXs+t/7V7ITKHc4HwPuXAIhhtSNWDFUR46VT3duLWS6/upJD
+# kems/lRUt80QloR/5DeaDMcZBLe72nGQtUEa4T0FnAlV2KKz5mcDzR8LOZO2cbTx
+# 1k9+ux2a868x11tFQfl1+dmuxIEVhVcwGgs4hwx1EwL5w8G5yxrdZH1+NwMb3Dj1
+# 6cxT7aRF4fg0YMChoyWhys7lmMyvJR7Ok122RUGySOEjeMYKuPotnHmRAj5eETsx
+# vR2ju7OEOE5nlwHMs4jMW+eUB0A2rsECAwEAAaNGMEQwDgYDVR0PAQH/BAQDAgeA
+# MBMGA1UdJQQMMAoGCCsGAQUFBwMDMB0GA1UdDgQWBBRcSVrdsgcV9IFAaEQwHJuB
+# 7i7PSzANBgkqhkiG9w0BAQ0FAAOCAQEASKmIff9FS55bdHLM+EViX+raZnVK79/Z
+# pV3yVwUAYEoyq1DaYdZcrxJ16K06gk8k+XI0OeRl2jeI0GKRNhSEllLXv2/iWNFj
+# 5ecUtxMJeXOh1SMA2f+eIVyns0LtfDVVUb2wC+W5S/n5/jRTGpEYj/Gf2nb5kje6
+# rBfB/x1kk0Z5AAM3w3u36Jcs34Jno+ErZO10V0Gm2lD3omE4iRoWNBRZJ7FyyMJN
+# xdGsxOS0cVA+6oaCtpxT/cj41V6n5JsTrdlj6OxRgzyWEtIjwf6EDuP/t8dGB14J
+# hPAaInDUQPY0CdbP4A0Dl9KjloG3nHcDXn9bv057/g/ZUHbeJBfOszGCAcQwggHA
+# AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
+# GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
+# KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
+# 9w0BCQQxFgQUJXaJjO7EVcJKIeTpau1letyfgkIwDQYJKoZIhvcNAQEBBQAEggEA
+# cjoC/euiBixY2he9SQR0VW8lKt06ZMt+UyAmtGKvMR1iGaM2SzN4EoSdlvNvZSQp
+# 90+RDg5FFo52PRYolnKEWj8ngrMWBGCaF+vxVsU9jm6x7KuzxFDucoqLXHBVXNFZ
+# l0VcUSlWV9RMjsf55BmPQaLZxrKP7sO9bzuRuR7zvOi/J2B9rQhcH3rLzfxs5fXQ
+# Bx4fFR9409cqKGLGkdZLQ01ncDOl3Md3n5xS4wUu0LMf2/76rnEG4jqepUb33HB+
+# VueA+GLrpvkEYUIi4iEXUW1kR50SuR0YGRPMH3chqvHypvLbPJY5GoTUc+f+Su9n
+# uexDHWW3QdkSjTqLTSekDw==
 # SIG # End signature block

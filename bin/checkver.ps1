@@ -275,7 +275,7 @@ while ($in_progress -gt 0) {
     $ver = $Version
 
     if (!$ver) {
-        if (!$regex -and $replace) {
+        if (!$regexp -and $replace) {
             next "'replace' requires 're' or 'regex'"
             continue
         }
@@ -294,13 +294,15 @@ while ($in_progress -gt 0) {
             }
             $page = (New-Object System.IO.StreamReader($ms, (Get-Encoding $wc))).ReadToEnd()
         }
+        $source = $url
         if ($script) {
             $page = Invoke-Command ([scriptblock]::Create($script -join "`r`n"))
+            $source = 'the output of script'
         }
 
         if ($jsonpath) {
             # Return only a single value if regex is absent
-            $noregex = [String]::IsNullOrEmpty($regex)
+            $noregex = [String]::IsNullOrEmpty($regexp)
             # If reverse is ON and regex is ON,
             # Then reverse would have no effect because regex handles reverse
             # on its own
@@ -310,7 +312,7 @@ while ($in_progress -gt 0) {
                 $ver = json_path_legacy $page $jsonpath
             }
             if (!$ver) {
-                next "couldn't find '$jsonpath' in $url"
+                next "couldn't find '$jsonpath' in $source"
                 continue
             }
         }
@@ -332,7 +334,7 @@ while ($in_progress -gt 0) {
             # Getting version from XML, using XPath
             $ver = $xml.SelectSingleNode($xpath, $nsmgr).'#text'
             if (!$ver) {
-                next "couldn't find '$($xpath -replace 'ns:', '')' in $url"
+                next "couldn't find '$($xpath -replace 'ns:', '')' in $source"
                 continue
             }
         }
@@ -348,31 +350,31 @@ while ($in_progress -gt 0) {
         }
 
         if ($regexp) {
-            $regex = New-Object System.Text.RegularExpressions.Regex($regexp)
+            $re = New-Object System.Text.RegularExpressions.Regex($regexp)
             if ($reverse) {
-                $match = $regex.Matches($page) | Select-Object -Last 1
+                $match = $re.Matches($page) | Select-Object -Last 1
             } else {
-                $match = $regex.Matches($page) | Select-Object -First 1
+                $match = $re.Matches($page) | Select-Object -First 1
             }
 
             if ($match -and $match.Success) {
                 $matchesHashtable = @{}
-                $regex.GetGroupNames() | ForEach-Object { $matchesHashtable.Add($_, $match.Groups[$_].Value) }
+                $re.GetGroupNames() | ForEach-Object { $matchesHashtable.Add($_, $match.Groups[$_].Value) }
                 $ver = $matchesHashtable['1']
                 if ($replace) {
-                    $ver = $regex.Replace($match.Value, $replace)
+                    $ver = $re.Replace($match.Value, $replace)
                 }
                 if (!$ver) {
                     $ver = $matchesHashtable['version']
                 }
             } else {
-                next "couldn't match '$regexp' in $url"
+                next "couldn't match '$regexp' in $source"
                 continue
             }
         }
 
         if (!$ver) {
-            next "couldn't find new version in $url"
+            next "couldn't find new version in $source"
             continue
         }
     }
@@ -418,34 +420,33 @@ while ($in_progress -gt 0) {
 }
 
 # SIG # Begin signature block
-# MIIFcQYJKoZIhvcNAQcCoIIFYjCCBV4CAQExDzANBglghkgBZQMEAgEFADB5Bgor
-# BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCC1MCvtdV5uiwTW
-# hZwJGhEZcPieKRmpXiBK3PY4yETkQqCCAvIwggLuMIIB1qADAgECAhBRXjN43tOe
-# vkj4l+euvSLrMA0GCSqGSIb3DQEBDQUAMA8xDTALBgNVBAMMBHFycXIwHhcNMjQw
-# NjI5MDczMTE4WhcNMjUwNjI5MDc1MTE4WjAPMQ0wCwYDVQQDDARxcnFyMIIBIjAN
-# BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzGyCuR6iKpn8DX3kWN4b7mG9FwOf
-# P+3w/qAPET+0ejsqwRfd3PbQBtCln8LP40sTe0Oy5tOFez63/tXshModzgfA+5cA
-# iGG1I1YMVRHjpVPd24tZLr+6kkOR6az+VFS3zRCWhH/kN5oMxxkEt7vacZC1QRrh
-# PQWcCVXYorPmZwPNHws5k7ZxtPHWT367HZrzrzHXW0VB+XX52a7EgRWFVzAaCziH
-# DHUTAvnDwbnLGt1kfX43AxvcOPXpzFPtpEXh+DRgwKGjJaHKzuWYzK8lHs6TXbZF
-# QbJI4SN4xgq4+i2ceZECPl4ROzG9HaO7s4Q4TmeXAcyziMxb55QHQDauwQIDAQAB
-# o0YwRDAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYIKwYBBQUHAwMwHQYDVR0O
-# BBYEFFxJWt2yBxX0gUBoRDAcm4HuLs9LMA0GCSqGSIb3DQEBDQUAA4IBAQBIqYh9
-# /0VLnlt0csz4RWJf6tpmdUrv39mlXfJXBQBgSjKrUNph1lyvEnXorTqCTyT5cjQ5
-# 5GXaN4jQYpE2FISWUte/b+JY0WPl5xS3Ewl5c6HVIwDZ/54hXKezQu18NVVRvbAL
-# 5blL+fn+NFMakRiP8Z/advmSN7qsF8H/HWSTRnkAAzfDe7folyzfgmej4Stk7XRX
-# QabaUPeiYTiJGhY0FFknsXLIwk3F0azE5LRxUD7qhoK2nFP9yPjVXqfkmxOt2WPo
-# 7FGDPJYS0iPB/oQO4/+3x0YHXgmE8BoicNRA9jQJ1s/gDQOX0qOWgbecdwNef1u/
-# Tnv+D9lQdt4kF86zMYIB1TCCAdECAQEwIzAPMQ0wCwYDVQQDDARxcnFyAhBRXjN4
-# 3tOevkj4l+euvSLrMA0GCWCGSAFlAwQCAQUAoIGEMBgGCisGAQQBgjcCAQwxCjAI
-# oAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGCNwIB
-# CzEOMAwGCisGAQQBgjcCARUwLwYJKoZIhvcNAQkEMSIEIFEUIEMtJIMyjQ7o6Isi
-# O3r9XRYnSieWsssYP7u9M4q+MA0GCSqGSIb3DQEBAQUABIIBAIgvTUOc1DGw+S4M
-# c0rjpCmtIZEMSVOOXgFfOE4ixTX4eSjv3FYg1WNJXIO+ohAEXokEzPFTcP6c7kVP
-# wNFvr0/1y0Rjl73LEYJKI0PSehKF66J5nPZ8g3nQhfc9EbySvujAznTkWOkuy4pJ
-# lrE0idU9oksxueEic0O10I4iJi62E1Got185URGx9Y01WgdDmJYGuAVE/ebNVUCS
-# ssCWGZizV5pSwlyY+UVvMcXgS9uzuVCG3pYa2YcX3NBW4c9M8xdBQQwto5u2IFlk
-# 45tcSpu0pOO6ok/VmnDFmDsCsjVBus4y2rPrP8y/MDR6JrKDOGqSob0gojuMomn5
-# HqNWzfU=
+# MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
+# gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU2DzTX+ybmkh/lsUQFVYOW/zz
+# 1XCgggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
+# NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
+# AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
+# pZ/Cz+NLE3tDsubThXs+t/7V7ITKHc4HwPuXAIhhtSNWDFUR46VT3duLWS6/upJD
+# kems/lRUt80QloR/5DeaDMcZBLe72nGQtUEa4T0FnAlV2KKz5mcDzR8LOZO2cbTx
+# 1k9+ux2a868x11tFQfl1+dmuxIEVhVcwGgs4hwx1EwL5w8G5yxrdZH1+NwMb3Dj1
+# 6cxT7aRF4fg0YMChoyWhys7lmMyvJR7Ok122RUGySOEjeMYKuPotnHmRAj5eETsx
+# vR2ju7OEOE5nlwHMs4jMW+eUB0A2rsECAwEAAaNGMEQwDgYDVR0PAQH/BAQDAgeA
+# MBMGA1UdJQQMMAoGCCsGAQUFBwMDMB0GA1UdDgQWBBRcSVrdsgcV9IFAaEQwHJuB
+# 7i7PSzANBgkqhkiG9w0BAQ0FAAOCAQEASKmIff9FS55bdHLM+EViX+raZnVK79/Z
+# pV3yVwUAYEoyq1DaYdZcrxJ16K06gk8k+XI0OeRl2jeI0GKRNhSEllLXv2/iWNFj
+# 5ecUtxMJeXOh1SMA2f+eIVyns0LtfDVVUb2wC+W5S/n5/jRTGpEYj/Gf2nb5kje6
+# rBfB/x1kk0Z5AAM3w3u36Jcs34Jno+ErZO10V0Gm2lD3omE4iRoWNBRZJ7FyyMJN
+# xdGsxOS0cVA+6oaCtpxT/cj41V6n5JsTrdlj6OxRgzyWEtIjwf6EDuP/t8dGB14J
+# hPAaInDUQPY0CdbP4A0Dl9KjloG3nHcDXn9bv057/g/ZUHbeJBfOszGCAcQwggHA
+# AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
+# GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
+# KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
+# 9w0BCQQxFgQUgVjlH9VBaFyERo4uCPHp+iCRxFUwDQYJKoZIhvcNAQEBBQAEggEA
+# kMIzUmEw6xxwhtDMwFRgwkrJlQwoEdeq8rCpAVkhWem7fpLR+YPgCyomU1PRd04S
+# 0fq28MTGID0pb73c1Jpyub6C9FIQjDdgKkZ+wNNGPnN5J+7mjzfjFBs7tj6QWj/P
+# 0Xre4WAyXLY/t1KCcDw8q/cHsXwHz21x4IM9iTBrEcA8BqJfFvW719GyUNbBJjrj
+# qX7tKSMd+y9/BgYjHZXINqFsmr+dt1C036qUNz13jd8i2HhsSX92f13Ya5cne9sv
+# aSVdQrzOpIT31BC/wADT/1p4IFWYpH+BCpbsp9Dc2RV/Jz3rvSOpF+Sh1HngG1Y9
+# VXzOEsx8d1gdPrmZcbtIww==
 # SIG # End signature block

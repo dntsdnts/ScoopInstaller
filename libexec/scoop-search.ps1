@@ -3,6 +3,8 @@
 # Help: Searches for apps that are available to install.
 #
 # If used with [query], shows app names that match the query.
+#   - With 'use_sqlite_cache' enabled, [query] is partially matched against app names, binaries, and shortcuts.
+#   - Without 'use_sqlite_cache', [query] can be a regular expression to match against app names and binaries.
 # Without [query], shows all the available apps.
 param($query)
 
@@ -11,16 +13,10 @@ param($query)
 
 $list = [System.Collections.Generic.List[PSCustomObject]]::new()
 
-try {
-    $query = New-Object Regex $query, 'IgnoreCase'
-} catch {
-    abort "Invalid regular expression: $($_.Exception.InnerException.Message)"
-}
-
 $githubtoken = Get-GitHubToken
 $authheader = @{}
 if ($githubtoken) {
-    $authheader = @{'Authorization' = "token $githubtoken"}
+    $authheader = @{'Authorization' = "token $githubtoken" }
 }
 
 function bin_match($manifest, $query) {
@@ -39,16 +35,16 @@ function bin_match($manifest, $query) {
 
 function bin_match_json($json, $query) {
     [System.Text.Json.JsonElement]$bin = [System.Text.Json.JsonElement]::new()
-    if (!$json.RootElement.TryGetProperty("bin", [ref] $bin)) { return $false }
+    if (!$json.RootElement.TryGetProperty('bin', [ref] $bin)) { return $false }
     $bins = @()
-    if($bin.ValueKind -eq [System.Text.Json.JsonValueKind]::String -and [System.IO.Path]::GetFileNameWithoutExtension($bin) -match $query) {
+    if ($bin.ValueKind -eq [System.Text.Json.JsonValueKind]::String -and [System.IO.Path]::GetFileNameWithoutExtension($bin) -match $query) {
         $bins += [System.IO.Path]::GetFileName($bin)
     } elseif ($bin.ValueKind -eq [System.Text.Json.JsonValueKind]::Array) {
-        foreach($subbin in $bin.EnumerateArray()) {
-            if($subbin.ValueKind -eq [System.Text.Json.JsonValueKind]::String -and [System.IO.Path]::GetFileNameWithoutExtension($subbin) -match $query) {
+        foreach ($subbin in $bin.EnumerateArray()) {
+            if ($subbin.ValueKind -eq [System.Text.Json.JsonValueKind]::String -and [System.IO.Path]::GetFileNameWithoutExtension($subbin) -match $query) {
                 $bins += [System.IO.Path]::GetFileName($subbin)
             } elseif ($subbin.ValueKind -eq [System.Text.Json.JsonValueKind]::Array) {
-                if([System.IO.Path]::GetFileNameWithoutExtension($subbin[0]) -match $query) {
+                if ([System.IO.Path]::GetFileNameWithoutExtension($subbin[0]) -match $query) {
                     $bins += [System.IO.Path]::GetFileName($subbin[0])
                 } elseif ($subbin.GetArrayLength() -ge 2 -and $subbin[1] -match $query) {
                     $bins += $subbin[1]
@@ -65,25 +61,33 @@ function search_bucket($bucket, $query) {
     $apps = Get-ChildItem (Find-BucketDirectory $bucket) -Filter '*.json' -Recurse
 
     $apps | ForEach-Object {
-        $json = [System.Text.Json.JsonDocument]::Parse([System.IO.File]::ReadAllText($_.FullName))
+        $filepath = $_.FullName
+
+        $json = try {
+            [System.Text.Json.JsonDocument]::Parse([System.IO.File]::ReadAllText($filepath))
+        } catch {
+            debug "Failed to parse manifest file: $filepath (error: $_)"
+            return
+        }
+
         $name = $_.BaseName
 
         if ($name -match $query) {
             $list.Add([PSCustomObject]@{
-                Name = $name
-                Version = $json.RootElement.GetProperty("version")
-                Source = $bucket
-                Binaries = ""
-            })
+                    Name     = $name
+                    Version  = $json.RootElement.GetProperty('version')
+                    Source   = $bucket
+                    Binaries = ''
+                })
         } else {
             $bin = bin_match_json $json $query
             if ($bin) {
                 $list.Add([PSCustomObject]@{
-                    Name = $name
-                    Version = $json.RootElement.GetProperty("version")
-                    Source = $bucket
-                    Binaries = $bin -join ' | '
-                })
+                        Name     = $name
+                        Version  = $json.RootElement.GetProperty('version')
+                        Source   = $bucket
+                        Binaries = $bin -join ' | '
+                    })
             }
         }
     }
@@ -99,20 +103,20 @@ function search_bucket_legacy($bucket, $query) {
 
         if ($name -match $query) {
             $list.Add([PSCustomObject]@{
-                Name = $name
-                Version = $manifest.Version
-                Source = $bucket
-                Binaries = ""
-            })
+                    Name     = $name
+                    Version  = $manifest.Version
+                    Source   = $bucket
+                    Binaries = ''
+                })
         } else {
             $bin = bin_match $manifest $query
             if ($bin) {
                 $list.Add([PSCustomObject]@{
-                    Name = $name
-                    Version = $manifest.Version
-                    Source = $bucket
-                    Binaries = $bin -join ' | '
-                })
+                        Name     = $name
+                        Version  = $manifest.Version
+                        Source   = $bucket
+                        Binaries = $bin -join ' | '
+                    })
             }
         }
     }
@@ -154,7 +158,7 @@ function search_remotes($query) {
     $names = $buckets | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty name
 
     $results = $names | Where-Object { !(Test-Path $(Find-BucketDirectory $_)) } | ForEach-Object {
-        @{ "bucket" = $_; "results" = (search_remote $_ $query) }
+        @{ 'bucket' = $_; 'results' = (search_remote $_ $query) }
     } | Where-Object { $_.results }
 
     if ($results.count -gt 0) {
@@ -175,25 +179,45 @@ function search_remotes($query) {
     $remote_list
 }
 
-$jsonTextAvailable = [System.AppDomain]::CurrentDomain.GetAssemblies() | Where-object { [System.IO.Path]::GetFileNameWithoutExtension($_.Location) -eq "System.Text.Json" }
+if (get_config USE_SQLITE_CACHE) {
+    . "$PSScriptRoot\..\lib\database.ps1"
+    Select-ScoopDBItem $query -From @('name', 'binary', 'shortcut') |
+        Select-Object -Property name, version, bucket, binary |
+        ForEach-Object {
+            $list.Add([PSCustomObject]@{
+                    Name     = $_.name
+                    Version  = $_.version
+                    Source   = $_.bucket
+                    Binaries = $_.binary
+                })
+        }
+} else {
+    try {
+        $query = New-Object Regex $query, 'IgnoreCase'
+    } catch {
+        abort "Invalid regular expression: $($_.Exception.InnerException.Message)"
+    }
 
-Get-LocalBucket | ForEach-Object {
-    if ($jsonTextAvailable) {
-        search_bucket $_ $query
-    } else {
-        search_bucket_legacy $_ $query
+    $jsonTextAvailable = [System.AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { [System.IO.Path]::GetFileNameWithoutExtension($_.Location) -eq 'System.Text.Json' }
+
+    Get-LocalBucket | ForEach-Object {
+        if ($jsonTextAvailable) {
+            search_bucket $_ $query
+        } else {
+            search_bucket_legacy $_ $query
+        }
     }
 }
 
 if ($list.Count -gt 0) {
-    Write-Host "Results from local buckets..."
+    Write-Host 'Results from local buckets...'
     $list
 }
 
 if ($list.Count -eq 0 -and !(github_ratelimit_reached)) {
     $remote_results = search_remotes $query
     if (!$remote_results) {
-        warn "No matches found."
+        warn 'No matches found.'
         exit 1
     }
     $remote_results
@@ -202,34 +226,33 @@ if ($list.Count -eq 0 -and !(github_ratelimit_reached)) {
 exit 0
 
 # SIG # Begin signature block
-# MIIFcQYJKoZIhvcNAQcCoIIFYjCCBV4CAQExDzANBglghkgBZQMEAgEFADB5Bgor
-# BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCd4PWPEKh7ElrA
-# 3fg9SQNZZ3vTNSaRz1qn0NSe7vFxFqCCAvIwggLuMIIB1qADAgECAhBRXjN43tOe
-# vkj4l+euvSLrMA0GCSqGSIb3DQEBDQUAMA8xDTALBgNVBAMMBHFycXIwHhcNMjQw
-# NjI5MDczMTE4WhcNMjUwNjI5MDc1MTE4WjAPMQ0wCwYDVQQDDARxcnFyMIIBIjAN
-# BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzGyCuR6iKpn8DX3kWN4b7mG9FwOf
-# P+3w/qAPET+0ejsqwRfd3PbQBtCln8LP40sTe0Oy5tOFez63/tXshModzgfA+5cA
-# iGG1I1YMVRHjpVPd24tZLr+6kkOR6az+VFS3zRCWhH/kN5oMxxkEt7vacZC1QRrh
-# PQWcCVXYorPmZwPNHws5k7ZxtPHWT367HZrzrzHXW0VB+XX52a7EgRWFVzAaCziH
-# DHUTAvnDwbnLGt1kfX43AxvcOPXpzFPtpEXh+DRgwKGjJaHKzuWYzK8lHs6TXbZF
-# QbJI4SN4xgq4+i2ceZECPl4ROzG9HaO7s4Q4TmeXAcyziMxb55QHQDauwQIDAQAB
-# o0YwRDAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYIKwYBBQUHAwMwHQYDVR0O
-# BBYEFFxJWt2yBxX0gUBoRDAcm4HuLs9LMA0GCSqGSIb3DQEBDQUAA4IBAQBIqYh9
-# /0VLnlt0csz4RWJf6tpmdUrv39mlXfJXBQBgSjKrUNph1lyvEnXorTqCTyT5cjQ5
-# 5GXaN4jQYpE2FISWUte/b+JY0WPl5xS3Ewl5c6HVIwDZ/54hXKezQu18NVVRvbAL
-# 5blL+fn+NFMakRiP8Z/advmSN7qsF8H/HWSTRnkAAzfDe7folyzfgmej4Stk7XRX
-# QabaUPeiYTiJGhY0FFknsXLIwk3F0azE5LRxUD7qhoK2nFP9yPjVXqfkmxOt2WPo
-# 7FGDPJYS0iPB/oQO4/+3x0YHXgmE8BoicNRA9jQJ1s/gDQOX0qOWgbecdwNef1u/
-# Tnv+D9lQdt4kF86zMYIB1TCCAdECAQEwIzAPMQ0wCwYDVQQDDARxcnFyAhBRXjN4
-# 3tOevkj4l+euvSLrMA0GCWCGSAFlAwQCAQUAoIGEMBgGCisGAQQBgjcCAQwxCjAI
-# oAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGCNwIB
-# CzEOMAwGCisGAQQBgjcCARUwLwYJKoZIhvcNAQkEMSIEIPqHxihxowg8AhQ5UB2F
-# 4DFqlUplsWKtofriPIk2Qia2MA0GCSqGSIb3DQEBAQUABIIBAMnV2EnH4x6frDWB
-# WPSdp2F1gKar5Se3sN8Hf/0X1BgVwF93XJlK2wmXcR0UNgFTDJZ0JCqzJ5swDv1t
-# YTqQI2dk/RC072TbCSgfowoTUR/8S3QJTvIKM26vW+6k/4rj0Pj+NWa9ufBT6u6D
-# +KgLWQahZqzoo5H3zU+V/75qYfz1dOcAAnoEjE2XCV2TaP2fQLBo2z0RtTzMrQrR
-# tO+QNam4Ay6jDhHSDZfuP0GFhaoD/1zc/cd0HCSgb3DNpWUkk2ghQIxbHTfu12As
-# 5ww9kJtLayQko7HfMGmkElDZU0T/wZlQJCns5p7bryHoULgZIEZqvH7Ktzj86RYE
-# tmBhT5g=
+# MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
+# gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUrFXX3YaBZlEr6l5NDxq4Ort2
+# U4+gggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
+# NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
+# AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
+# pZ/Cz+NLE3tDsubThXs+t/7V7ITKHc4HwPuXAIhhtSNWDFUR46VT3duLWS6/upJD
+# kems/lRUt80QloR/5DeaDMcZBLe72nGQtUEa4T0FnAlV2KKz5mcDzR8LOZO2cbTx
+# 1k9+ux2a868x11tFQfl1+dmuxIEVhVcwGgs4hwx1EwL5w8G5yxrdZH1+NwMb3Dj1
+# 6cxT7aRF4fg0YMChoyWhys7lmMyvJR7Ok122RUGySOEjeMYKuPotnHmRAj5eETsx
+# vR2ju7OEOE5nlwHMs4jMW+eUB0A2rsECAwEAAaNGMEQwDgYDVR0PAQH/BAQDAgeA
+# MBMGA1UdJQQMMAoGCCsGAQUFBwMDMB0GA1UdDgQWBBRcSVrdsgcV9IFAaEQwHJuB
+# 7i7PSzANBgkqhkiG9w0BAQ0FAAOCAQEASKmIff9FS55bdHLM+EViX+raZnVK79/Z
+# pV3yVwUAYEoyq1DaYdZcrxJ16K06gk8k+XI0OeRl2jeI0GKRNhSEllLXv2/iWNFj
+# 5ecUtxMJeXOh1SMA2f+eIVyns0LtfDVVUb2wC+W5S/n5/jRTGpEYj/Gf2nb5kje6
+# rBfB/x1kk0Z5AAM3w3u36Jcs34Jno+ErZO10V0Gm2lD3omE4iRoWNBRZJ7FyyMJN
+# xdGsxOS0cVA+6oaCtpxT/cj41V6n5JsTrdlj6OxRgzyWEtIjwf6EDuP/t8dGB14J
+# hPAaInDUQPY0CdbP4A0Dl9KjloG3nHcDXn9bv057/g/ZUHbeJBfOszGCAcQwggHA
+# AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
+# GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
+# KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
+# 9w0BCQQxFgQUS2IJU7pCdDExFx7iJUHPJWZOEg8wDQYJKoZIhvcNAQEBBQAEggEA
+# KMwgOCXTJ0gNMcNatw423CkDwmjngy6kBEC4XrdhyE5AmC1AgR7BOSMAveBJbsWY
+# 7YhAi5bnOCx5x68tIVJynxJMq2Xve214fm/+yW2CNPUm4rA+QOkkpaQOaTbqNFa1
+# Obv2/vtYTNT8EvjgJJ1SQqsSx+0I4wrVCsPWWcynwoDAMNX2r3xKEIhV/ST74Bg9
+# o8WVHlVaSzyP4qhfJHtHtUoREncoKdaEbanYKMK4bKzS5g+8nyeMgpvRqetmB/Gc
+# bJyDu9qmWBLUaDTJ4HwsCO42UYb+tPzVPjoTGWbI51tQnnv7dDMUkixOLl11FVE2
+# Ms0gu2XbRxs0zTiTurgMbQ==
 # SIG # End signature block

@@ -50,9 +50,10 @@ function install_app($app, $architecture, $global, $suggested, $use_cache = $tru
     $persist_dir = persistdir $app $global
 
     $fname = Invoke-ScoopDownload $app $version $manifest $bucket $architecture $dir $use_cache $check_hash
-    Invoke-HookScript -HookType 'pre_install' -Manifest $manifest -Arch $architecture
+    Invoke-Extraction -Path $dir -Name $fname -Manifest $manifest -ProcessorArchitecture $architecture
+    Invoke-HookScript -HookType 'pre_install' -Manifest $manifest -ProcessorArchitecture $architecture
 
-    run_installer $fname $manifest $architecture $dir $global
+    Invoke-Installer -Path $dir -Name $fname -Manifest $manifest -ProcessorArchitecture $architecture -AppName $app -Global:$global
     ensure_install_dir_not_in_path $dir $global
     $dir = link_current $dir
     create_shims $manifest $dir $global $architecture
@@ -65,7 +66,7 @@ function install_app($app, $architecture, $global, $suggested, $use_cache = $tru
     persist_data $manifest $original_dir $persist_dir
     persist_permission $manifest $global
 
-    Invoke-HookScript -HookType 'post_install' -Manifest $manifest -Arch $architecture
+    Invoke-HookScript -HookType 'post_install' -Manifest $manifest -ProcessorArchitecture $architecture
 
     # save info for uninstall
     save_installed_manifest $app $bucket $dir $url
@@ -539,20 +540,11 @@ function Invoke-ScoopDownload ($app, $version, $manifest, $bucket, $architecture
     # we only want to show this warning once
     if (!$use_cache) { warn 'Cache is being ignored.' }
 
-    # can be multiple urls: if there are, then installer should go last,
-    # so that $fname is set properly
+    # can be multiple urls: if there are, then installer should go first to make 'installer.args' section work
     $urls = @(script:url $manifest $architecture)
 
     # can be multiple cookies: they will be used for all HTTP requests.
     $cookies = $manifest.cookie
-
-    $fname = $null
-
-    # extract_dir and extract_to in manifest are like queues: for each url that
-    # needs to be extracted, will get the next dir from the queue
-    $extract_dirs = @(extract_dir $manifest $architecture)
-    $extract_tos = @(extract_to $manifest $architecture)
-    $extracted = 0
 
     # download first
     if (Test-Aria2Enabled) {
@@ -587,44 +579,7 @@ function Invoke-ScoopDownload ($app, $version, $manifest, $bucket, $architecture
         }
     }
 
-    foreach ($url in $urls) {
-        $fname = url_filename $url
-
-        $extract_dir = $extract_dirs[$extracted]
-        $extract_to = $extract_tos[$extracted]
-
-        # work out extraction method, if applicable
-        $extract_fn = $null
-        if ($manifest.innosetup) {
-            $extract_fn = 'Expand-InnoArchive'
-        } elseif ($fname -match '\.zip$') {
-            # Use 7zip when available (more fast)
-            if (((get_config USE_EXTERNAL_7ZIP) -and (Test-CommandAvailable 7z)) -or (Test-HelperInstalled -Helper 7zip)) {
-                $extract_fn = 'Expand-7zipArchive'
-            } else {
-                $extract_fn = 'Expand-ZipArchive'
-            }
-        } elseif ($fname -match '\.msi$') {
-            $extract_fn = 'Expand-MsiArchive'
-        } elseif (Test-ZstdRequirement -Uri $fname) {
-            # Zstd first
-            $extract_fn = 'Expand-ZstdArchive'
-        } elseif (Test-7zipRequirement -Uri $fname) {
-            # 7zip
-            $extract_fn = 'Expand-7zipArchive'
-        }
-
-        if ($extract_fn) {
-            Write-Host 'Extracting ' -NoNewline
-            Write-Host $fname -f Cyan -NoNewline
-            Write-Host ' ... ' -NoNewline
-            & $extract_fn -Path "$dir\$fname" -DestinationPath "$dir\$extract_to" -ExtractDir $extract_dir -Removal
-            Write-Host 'done.' -f Green
-            $extracted++
-        }
-    }
-
-    $fname # returns the last downloaded file
+    return $urls.ForEach({ url_filename $_ })
 }
 
 function cookie_header($cookies) {
@@ -696,70 +651,89 @@ function check_hash($file, $hash, $app_name) {
     return $true, $null
 }
 
-# for dealing with installers
-function args($config, $dir, $global) {
-    if ($config) { return $config | ForEach-Object { (format $_ @{'dir' = $dir; 'global' = $global }) } }
-    @()
-}
-
-function run_installer($fname, $manifest, $architecture, $dir, $global) {
-    $installer = installer $manifest $architecture
-    if ($installer.script) {
-        Write-Output 'Running installer script...'
-        Invoke-Command ([scriptblock]::Create($installer.script -join "`r`n"))
-        return
-    }
-    if ($installer) {
-        $prog = "$dir\$(coalesce $installer.file "$fname")"
-        if (!(is_in_dir $dir $prog)) {
-            abort "Error in manifest: Installer $prog is outside the app directory."
+function Invoke-Installer {
+    [CmdletBinding()]
+    param (
+        [string]
+        $Path,
+        [string[]]
+        $Name,
+        [psobject]
+        $Manifest,
+        [Alias('Arch', 'Architecture')]
+        [ValidateSet('32bit', '64bit', 'arm64')]
+        [string]
+        $ProcessorArchitecture,
+        [string]
+        $AppName,
+        [switch]
+        $Global,
+        [switch]
+        $Uninstall
+    )
+    $type = if ($Uninstall) { 'uninstaller' } else { 'installer' }
+    $installer = arch_specific $type $Manifest $ProcessorArchitecture
+    if ($installer.file -or $installer.args) {
+        # Installer filename is either explicit defined ('installer.file') or file name in the first URL
+        if (!$Name) {
+            $Name = url_filename @(url $manifest $architecture)
         }
-        $arg = @(args $installer.args $dir $global)
-        if ($prog.endswith('.ps1')) {
-            & $prog @arg
+        $progName = "$Path\$(coalesce $installer.file $Name[0])"
+        if (!(is_in_dir $Path $progName)) {
+            abort "Error in manifest: $((Get-Culture).TextInfo.ToTitleCase($type)) $progName is outside the app directory."
+        } elseif (!(Test-Path $progName)) {
+            abort "$((Get-Culture).TextInfo.ToTitleCase($type)) $progName is missing."
+        }
+        $substitutions = @{
+            '$dir'     = $Path
+            '$global'  = $Global
+            '$version' = $Manifest.version
+        }
+        $fnArgs = substitute $installer.args $substitutions
+        if ($progName.EndsWith('.ps1')) {
+            & $progName @fnArgs
         } else {
-            $installed = Invoke-ExternalCommand $prog $arg -Activity 'Running installer...'
-            if (!$installed) {
-                abort "Installation aborted. You might need to run 'scoop uninstall $app' before trying again."
-            }
-            # Don't remove installer if "keep" flag is set to true
-            if (!($installer.keep -eq 'true')) {
-                Remove-Item $prog
-            }
-        }
-    }
-}
-
-function run_uninstaller($manifest, $architecture, $dir) {
-    $uninstaller = uninstaller $manifest $architecture
-    $version = $manifest.version
-    if ($uninstaller.script) {
-        Write-Output 'Running uninstaller script...'
-        Invoke-Command ([scriptblock]::Create($uninstaller.script -join "`r`n"))
-        return
-    }
-
-    if ($uninstaller.file) {
-        $prog = "$dir\$($uninstaller.file)"
-        $arg = args $uninstaller.args
-        if (!(is_in_dir $dir $prog)) {
-            warn "Error in manifest: Installer $prog is outside the app directory, skipping."
-            $prog = $null
-        } elseif (!(Test-Path $prog)) {
-            warn "Uninstaller $prog is missing, skipping."
-            $prog = $null
-        }
-
-        if ($prog) {
-            if ($prog.endswith('.ps1')) {
-                & $prog @arg
-            } else {
-                $uninstalled = Invoke-ExternalCommand $prog $arg -Activity 'Running uninstaller...'
-                if (!$uninstalled) {
+            $status = Invoke-ExternalCommand $progName -ArgumentList $fnArgs -Activity "Running $type ..."
+            if (!$status) {
+                if ($Uninstall) {
                     abort 'Uninstallation aborted.'
+                } else {
+                    abort "Installation aborted. You might need to run 'scoop uninstall $AppName' before trying again."
                 }
             }
+            # Don't remove installer if "keep" flag is set to true
+            if (!$installer.keep) {
+                Remove-Item $progName
+            }
         }
+    }
+    Invoke-HookScript -HookType $type -Manifest $Manifest -ProcessorArchitecture $ProcessorArchitecture
+}
+
+function Invoke-HookScript {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('installer', 'pre_install', 'post_install', 'uninstaller', 'pre_uninstall', 'post_uninstall')]
+        [String] $HookType,
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [PSCustomObject] $Manifest,
+        [Parameter(Mandatory = $true)]
+        [Alias('Arch', 'Architecture')]
+        [ValidateSet('32bit', '64bit', 'arm64')]
+        [string]
+        $ProcessorArchitecture
+    )
+
+    $script = arch_specific $HookType $Manifest $ProcessorArchitecture
+    if ($HookType -in @('installer', 'uninstaller')) {
+        $script = $script.script
+    }
+    if ($script) {
+        Write-Host "Running $HookType script..." -NoNewline
+        Invoke-Command ([scriptblock]::Create($script -join "`r`n"))
+        Write-Host 'done.' -ForegroundColor Green
     }
 }
 
@@ -929,7 +903,7 @@ function env_set($manifest, $dir, $global, $arch) {
     if ($env_set) {
         $env_set | Get-Member -Member NoteProperty | ForEach-Object {
             $name = $_.name
-            $val = format $env_set.$($_.name) @{ 'dir' = $dir }
+            $val = substitute $env_set.$($_.name) @{ '$dir' = $dir }
             Set-EnvVar -Name $name -Value $val -Global:$global
             Set-Content env:\$name $val
         }
@@ -943,28 +917,6 @@ function env_rm($manifest, $global, $arch) {
             Set-EnvVar -Name $name -Value $null -Global:$global
             if (Test-Path env:\$name) { Remove-Item env:\$name }
         }
-    }
-}
-
-function Invoke-HookScript {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [ValidateSet('pre_install', 'post_install',
-            'pre_uninstall', 'post_uninstall')]
-        [String] $HookType,
-        [Parameter(Mandatory = $true)]
-        [ValidateNotNullOrEmpty()]
-        [PSCustomObject] $Manifest,
-        [Parameter(Mandatory = $true)]
-        [ValidateSet('32bit', '64bit', 'arm64')]
-        [String] $Arch
-    )
-
-    $script = arch_specific $HookType $Manifest $Arch
-    if ($script) {
-        Write-Output "Running $HookType script..."
-        Invoke-Command ([scriptblock]::Create($script -join "`r`n"))
     }
 }
 
@@ -1176,34 +1128,33 @@ function New-DirectoryJunction($source, $target) {
 }
 
 # SIG # Begin signature block
-# MIIFcQYJKoZIhvcNAQcCoIIFYjCCBV4CAQExDzANBglghkgBZQMEAgEFADB5Bgor
-# BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDtpCWp4ZewL7t6
-# 3zWZXNdAuQePbqz2oGx6i33GXn0v8qCCAvIwggLuMIIB1qADAgECAhBRXjN43tOe
-# vkj4l+euvSLrMA0GCSqGSIb3DQEBDQUAMA8xDTALBgNVBAMMBHFycXIwHhcNMjQw
-# NjI5MDczMTE4WhcNMjUwNjI5MDc1MTE4WjAPMQ0wCwYDVQQDDARxcnFyMIIBIjAN
-# BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzGyCuR6iKpn8DX3kWN4b7mG9FwOf
-# P+3w/qAPET+0ejsqwRfd3PbQBtCln8LP40sTe0Oy5tOFez63/tXshModzgfA+5cA
-# iGG1I1YMVRHjpVPd24tZLr+6kkOR6az+VFS3zRCWhH/kN5oMxxkEt7vacZC1QRrh
-# PQWcCVXYorPmZwPNHws5k7ZxtPHWT367HZrzrzHXW0VB+XX52a7EgRWFVzAaCziH
-# DHUTAvnDwbnLGt1kfX43AxvcOPXpzFPtpEXh+DRgwKGjJaHKzuWYzK8lHs6TXbZF
-# QbJI4SN4xgq4+i2ceZECPl4ROzG9HaO7s4Q4TmeXAcyziMxb55QHQDauwQIDAQAB
-# o0YwRDAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYIKwYBBQUHAwMwHQYDVR0O
-# BBYEFFxJWt2yBxX0gUBoRDAcm4HuLs9LMA0GCSqGSIb3DQEBDQUAA4IBAQBIqYh9
-# /0VLnlt0csz4RWJf6tpmdUrv39mlXfJXBQBgSjKrUNph1lyvEnXorTqCTyT5cjQ5
-# 5GXaN4jQYpE2FISWUte/b+JY0WPl5xS3Ewl5c6HVIwDZ/54hXKezQu18NVVRvbAL
-# 5blL+fn+NFMakRiP8Z/advmSN7qsF8H/HWSTRnkAAzfDe7folyzfgmej4Stk7XRX
-# QabaUPeiYTiJGhY0FFknsXLIwk3F0azE5LRxUD7qhoK2nFP9yPjVXqfkmxOt2WPo
-# 7FGDPJYS0iPB/oQO4/+3x0YHXgmE8BoicNRA9jQJ1s/gDQOX0qOWgbecdwNef1u/
-# Tnv+D9lQdt4kF86zMYIB1TCCAdECAQEwIzAPMQ0wCwYDVQQDDARxcnFyAhBRXjN4
-# 3tOevkj4l+euvSLrMA0GCWCGSAFlAwQCAQUAoIGEMBgGCisGAQQBgjcCAQwxCjAI
-# oAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGCNwIB
-# CzEOMAwGCisGAQQBgjcCARUwLwYJKoZIhvcNAQkEMSIEIKOs6wXSQxZx9GmVmh+i
-# Vi9J4Sq0DU9AIB7qsT+I2VY/MA0GCSqGSIb3DQEBAQUABIIBAAVoBBF5Dwwhj0w0
-# gB2tz97pIK8NZBOsulSOEIn0yW7fdHEhcJVjJoU6yBpJ4nWUYGU4SRW3W2Of5Og0
-# 047qE+4CQbvzFiPKf3dFGP3VBjReNk+faG86tgUelH06u1iBzqUOBWksWMoNMgJ1
-# DM2AHKcdTXE4LxIvYF7Rx9PHom5j5/KfdxDpHPwNGfixSKIIGk4wfCp6IrHY4Yej
-# 2Mxt7zZLR22me3dm6VnITo2ZoCk7eQBIF/dBuqVXWVNXOhBMN7xZgvTaQnrr6YaK
-# 7NZ+fpnGueMs38gIRNyttLMovjqE20MxABr/uI/NYa1vwL/IAbOBU37tvqkKeroI
-# YpoZ5x4=
+# MIIFTAYJKoZIhvcNAQcCoIIFPTCCBTkCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
+# gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUq4q1DDz5WI+USTae5nDDRmNE
+# 2AigggLyMIIC7jCCAdagAwIBAgIQUV4zeN7Tnr5I+Jfnrr0i6zANBgkqhkiG9w0B
+# AQ0FADAPMQ0wCwYDVQQDDARxcnFyMB4XDTI0MDYyOTA3MzExOFoXDTI1MDYyOTA3
+# NTExOFowDzENMAsGA1UEAwwEcXJxcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
+# AQoCggEBAMxsgrkeoiqZ/A195FjeG+5hvRcDnz/t8P6gDxE/tHo7KsEX3dz20AbQ
+# pZ/Cz+NLE3tDsubThXs+t/7V7ITKHc4HwPuXAIhhtSNWDFUR46VT3duLWS6/upJD
+# kems/lRUt80QloR/5DeaDMcZBLe72nGQtUEa4T0FnAlV2KKz5mcDzR8LOZO2cbTx
+# 1k9+ux2a868x11tFQfl1+dmuxIEVhVcwGgs4hwx1EwL5w8G5yxrdZH1+NwMb3Dj1
+# 6cxT7aRF4fg0YMChoyWhys7lmMyvJR7Ok122RUGySOEjeMYKuPotnHmRAj5eETsx
+# vR2ju7OEOE5nlwHMs4jMW+eUB0A2rsECAwEAAaNGMEQwDgYDVR0PAQH/BAQDAgeA
+# MBMGA1UdJQQMMAoGCCsGAQUFBwMDMB0GA1UdDgQWBBRcSVrdsgcV9IFAaEQwHJuB
+# 7i7PSzANBgkqhkiG9w0BAQ0FAAOCAQEASKmIff9FS55bdHLM+EViX+raZnVK79/Z
+# pV3yVwUAYEoyq1DaYdZcrxJ16K06gk8k+XI0OeRl2jeI0GKRNhSEllLXv2/iWNFj
+# 5ecUtxMJeXOh1SMA2f+eIVyns0LtfDVVUb2wC+W5S/n5/jRTGpEYj/Gf2nb5kje6
+# rBfB/x1kk0Z5AAM3w3u36Jcs34Jno+ErZO10V0Gm2lD3omE4iRoWNBRZJ7FyyMJN
+# xdGsxOS0cVA+6oaCtpxT/cj41V6n5JsTrdlj6OxRgzyWEtIjwf6EDuP/t8dGB14J
+# hPAaInDUQPY0CdbP4A0Dl9KjloG3nHcDXn9bv057/g/ZUHbeJBfOszGCAcQwggHA
+# AgEBMCMwDzENMAsGA1UEAwwEcXJxcgIQUV4zeN7Tnr5I+Jfnrr0i6zAJBgUrDgMC
+# GgUAoHgwGAYKKwYBBAGCNwIBDDEKMAigAoAAoQKAADAZBgkqhkiG9w0BCQMxDAYK
+# KwYBBAGCNwIBBDAcBgorBgEEAYI3AgELMQ4wDAYKKwYBBAGCNwIBFTAjBgkqhkiG
+# 9w0BCQQxFgQUhoWTvHXSvSZ+g6//GZWFz9SK5sIwDQYJKoZIhvcNAQEBBQAEggEA
+# OSaYy5v9S7+mx8wcFg/WkE/0s1DHJmZqBz4mhgBS2uZG5lNFt7QvLZ14ePoaPsIb
+# UXqaVvpiRDeFRVP50Ksfh+mUgghn3wMklwa4ebfstxXTZX+8MsAdNEbudzrXkXlT
+# OEPxILo+L0os7jCxA55jvX49oZM7DoflFWh9BPjCJSXp1itxxU53VIkbaD1NwwHR
+# 2ia2d37pQUhkvquJr5LWpq1652+eeM6u+SHTfE0pyTVYoNiF+jddofzA1jkaEh/4
+# CH07UQc+O6Yuq8l/p/+ZtNhSpMPYj/In7KAPXvxnGsQLYOGYO2CJNm1bI9sJ0BbP
+# BHXWQYcEM1Nyv3tNqL0uJA==
 # SIG # End signature block
