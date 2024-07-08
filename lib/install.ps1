@@ -1121,9 +1121,9 @@ function test_running_process($app, $global) {
 function New-DirectoryJunction($source, $target) {
     # test if this script is being executed inside a docker container
     if (Get-Service -Name cexecsvc -ErrorAction SilentlyContinue) {
-        cmd.exe /d /c "mklink /j `"$source`" `"$target`""
+        cmd.exe /d /c "mklink `"$source`" `"$target`""
     } else {
-        New-Item -Path $source -ItemType Junction -Value $target
+        New-Item -Path $source -ItemType SymbolicLink -Value $target
     }
 }
 
