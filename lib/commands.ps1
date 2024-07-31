@@ -1,3 +1,7 @@
+# Description: Functions for managing commands and aliases.
+
+## Functions for commands
+
 function command_files {
     (Get-ChildItem "$PSScriptRoot\..\libexec") + (Get-ChildItem "$scoopdir\shims") |
         Where-Object 'scoop-.*?\.ps1$' -Property Name -Match
@@ -19,11 +23,10 @@ function command_path($cmd) {
         # get path from shim
         $shim_path = "$scoopdir\shims\scoop-$cmd.ps1"
         $line = ((Get-Content $shim_path) | Where-Object { $_.startswith('$path') })
-        if($line) {
+        if ($line) {
             Invoke-Command ([scriptblock]::Create($line)) -NoNewScope
             $cmd_path = $path
-        }
-        else { $cmd_path = $shim_path }
+        } else { $cmd_path = $shim_path }
     }
 
     $cmd_path
@@ -35,35 +38,81 @@ function exec($cmd, $arguments) {
     & $cmd_path @arguments
 }
 
-# SIG # Begin signature block
-# MIIFcQYJKoZIhvcNAQcCoIIFYjCCBV4CAQExDzANBglghkgBZQMEAgEFADB5Bgor
-# BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCe9odZG6sS35qo
-# GhQ7Q27XDB8FGRJE+2lJezRRS6fe46CCAvIwggLuMIIB1qADAgECAhBRXjN43tOe
-# vkj4l+euvSLrMA0GCSqGSIb3DQEBDQUAMA8xDTALBgNVBAMMBHFycXIwHhcNMjQw
-# NjI5MDczMTE4WhcNMjUwNjI5MDc1MTE4WjAPMQ0wCwYDVQQDDARxcnFyMIIBIjAN
-# BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzGyCuR6iKpn8DX3kWN4b7mG9FwOf
-# P+3w/qAPET+0ejsqwRfd3PbQBtCln8LP40sTe0Oy5tOFez63/tXshModzgfA+5cA
-# iGG1I1YMVRHjpVPd24tZLr+6kkOR6az+VFS3zRCWhH/kN5oMxxkEt7vacZC1QRrh
-# PQWcCVXYorPmZwPNHws5k7ZxtPHWT367HZrzrzHXW0VB+XX52a7EgRWFVzAaCziH
-# DHUTAvnDwbnLGt1kfX43AxvcOPXpzFPtpEXh+DRgwKGjJaHKzuWYzK8lHs6TXbZF
-# QbJI4SN4xgq4+i2ceZECPl4ROzG9HaO7s4Q4TmeXAcyziMxb55QHQDauwQIDAQAB
-# o0YwRDAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYIKwYBBQUHAwMwHQYDVR0O
-# BBYEFFxJWt2yBxX0gUBoRDAcm4HuLs9LMA0GCSqGSIb3DQEBDQUAA4IBAQBIqYh9
-# /0VLnlt0csz4RWJf6tpmdUrv39mlXfJXBQBgSjKrUNph1lyvEnXorTqCTyT5cjQ5
-# 5GXaN4jQYpE2FISWUte/b+JY0WPl5xS3Ewl5c6HVIwDZ/54hXKezQu18NVVRvbAL
-# 5blL+fn+NFMakRiP8Z/advmSN7qsF8H/HWSTRnkAAzfDe7folyzfgmej4Stk7XRX
-# QabaUPeiYTiJGhY0FFknsXLIwk3F0azE5LRxUD7qhoK2nFP9yPjVXqfkmxOt2WPo
-# 7FGDPJYS0iPB/oQO4/+3x0YHXgmE8BoicNRA9jQJ1s/gDQOX0qOWgbecdwNef1u/
-# Tnv+D9lQdt4kF86zMYIB1TCCAdECAQEwIzAPMQ0wCwYDVQQDDARxcnFyAhBRXjN4
-# 3tOevkj4l+euvSLrMA0GCWCGSAFlAwQCAQUAoIGEMBgGCisGAQQBgjcCAQwxCjAI
-# oAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGCNwIB
-# CzEOMAwGCisGAQQBgjcCARUwLwYJKoZIhvcNAQkEMSIEIDpshT5Wz1dsC5EKU9xJ
-# UeMvVCaMmDUcR2D8Kgv0U8ERMA0GCSqGSIb3DQEBAQUABIIBAJZRa+TlL8bTEZ4W
-# wdnRxenAhcMaBJBTPbbOvkpFLcKlan967Agm/PPp11w8WFBgH9OR7cw2SrvhurJ4
-# ZcNWr97mGG3eK6Ky4QQ5CaVjvaQ9irDlfFAz3/aDJ+HFvesu5MvhTQffPKMgUIgp
-# LRPNRn92g6VZU6kBf29bQonnoA/DTvHzdYfwWviXaYftDnJ0poi9qsN0aqIGj97Q
-# JOIwhoGTxYuAqqPRnuAg5F9fxB+UbzwtIYac23yD9F6UwUT7AZWbJX4p0ZYEk3wP
-# MSEmRz+eSJ7O8Iz/tRgwnQnXwfhKuAqtTR2HJh25p19Hh1RGni7fVV8JbVzp8UQs
-# cVi/IyU=
-# SIG # End signature block
+## Functions for aliases
+
+function add_alias {
+    param(
+        [ValidateNotNullOrEmpty()]
+        [string]$name,
+        [ValidateNotNullOrEmpty()]
+        [string]$command,
+        [string]$description
+    )
+
+    $aliases = get_config ALIAS ([PSCustomObject]@{})
+    if ($aliases.$name) {
+        abort "Alias '$name' already exists."
+    }
+
+    $alias_script_name = "scoop-$name"
+    $shimdir = shimdir $false
+    if (Test-Path "$shimdir\$alias_script_name.ps1") {
+        abort "File '$alias_script_name.ps1' already exists in shims directory."
+    }
+    $script = @(
+        "# Summary: $description",
+        "$command"
+    ) -join "`n"
+    try {
+        $script | Out-UTF8File "$shimdir\$alias_script_name.ps1"
+    } catch {
+        abort $_.Exception
+    }
+
+    # Add the new alias to the config.
+    $aliases | Add-Member -MemberType NoteProperty -Name $name -Value $alias_script_name
+    set_config ALIAS $aliases | Out-Null
+}
+
+function rm_alias {
+    param(
+        [ValidateNotNullOrEmpty()]
+        [string]$name
+    )
+
+    $aliases = get_config ALIAS ([PSCustomObject]@{})
+    if (!$aliases.$name) {
+        abort "Alias '$name' doesn't exist."
+    }
+
+    info "Removing alias '$name'..."
+    Remove-Item "$(shimdir $false)\scoop-$name.ps1"
+    $aliases.PSObject.Properties.Remove($name)
+    set_config ALIAS $aliases | Out-Null
+}
+
+function list_aliases {
+    param(
+        [bool]$verbose
+    )
+
+    $aliases = get_config ALIAS ([PSCustomObject]@{})
+    $alias_info = $aliases.PSObject.Properties.Name | Where-Object { $_ } | ForEach-Object {
+        $content = Get-Content (command_path $_)
+        [PSCustomObject]@{
+            Name    = $_
+            Summary = (summary $content).Trim()
+            Command = ($content | Select-Object -Skip 1).Trim()
+        }
+    }
+    if (!$alias_info) {
+        info 'No alias found.'
+        return
+    }
+    $alias_info = $alias_info | Sort-Object Name
+    $properties = @('Name', 'Command')
+    if ($verbose) {
+        $properties += 'Summary'
+    }
+    $alias_info | Select-Object $properties
+}
